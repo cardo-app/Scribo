@@ -1,6 +1,6 @@
-# Cardo Notizen – Hinweise für Claude Code
+# Scribo – Hinweise für Claude Code
 
-Eigenständige Notizen-Web-App (PWA) für das Schreiben mit Stift (Apple Pencil), Funktionen nach Vorbild von GoodNotes, Aussehen und Farbthemen wie Cardo (Karteikarten-App im Nachbarordner `../Cardo-App`). Soll später evtl. in Cardo integriert werden. Nutzung auf iPad Pro 11" (Hauptgerät), iPhone 16 Pro und Mac.
+Scribo: eigenständige Notizen-Web-App (PWA), gehört zum Cardo-Ökosystem, für das Schreiben mit Stift (Apple Pencil), Funktionen nach Vorbild von GoodNotes, Aussehen und Farbthemen wie Cardo (Karteikarten-App im Nachbarordner `../Cardo-App`). Soll später evtl. in Cardo integriert werden. Nutzung auf iPad Pro 11" (Hauptgerät), iPhone 16 Pro und Mac.
 
 ## Arbeitsweise (Wünsche des Nutzers)
 - Sprache: Deutsch, kurz und verständlich (kein Fachjargon ohne Erklärung).
@@ -10,6 +10,7 @@ Eigenständige Notizen-Web-App (PWA) für das Schreiben mit Stift (Apple Pencil)
 ## Dateien
 - `index.html` – die ganze App (CSS + ein Inline-Skript als IIFE mit "use strict"). Farbthemen (THEMES, THEME_IC, CSS-Tokens) sind 1:1 aus Cardo übernommen – bei Änderungen an Cardos Themen hier mitziehen.
 - `sw.js` – Service Worker. **Bei jeder Änderung an index.html/sw.js die Cache-Version hochzählen** (`notizen-vNN`). Er darf nur Speicher löschen, die mit `notizen-` beginnen (Cardo liegt auf derselben Adresse).
+- `icons/icon.svg` – App-Icon (S aus zwei Bögen mit orangem Punkt, leichter Schatten); PNGs daraus mit `qlmanage -t -s 1024` + `sips` erzeugen.
 - `supabase-setup.sql` – einmal im Supabase-SQL-Editor ausführen (Tabelle `notes_docs`, privater Bucket `note-files`).
 - Ordner `Claude outputs/` NICHT committen.
 
@@ -24,3 +25,7 @@ Eigenständige Notizen-Web-App (PWA) für das Schreiben mit Stift (Apple Pencil)
 - Keine `//`-Kommentare in Einzeiler setzen, hinter denen noch Code steht – dort `/* … */`.
 - Testen ohne Konto: `index.html?local` → nur lokal, kein Supabase.
 - Commit-Nachricht auf Deutsch, beschreibend, mit „Cache vNN“ am Ende.
+
+## Entscheidungen des Nutzers
+- App heißt **Scribo** (Stand 30.09.2026). Icon vom Nutzer vorgegeben (S + oranger Punkt), Schatten ergänzt.
+- Notizen-Struktur: Fach → Unterordner nach Thema; Art (Vorlesung/Tutorium/Übung/Sonstiges) als Etikett, nicht als Ordner. Im Fach erscheinen alle Notizen der Unterordner gesammelt.
