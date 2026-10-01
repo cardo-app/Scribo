@@ -1525,21 +1525,28 @@ function drawStroke(x, s){
     if (n > 1) x.lineTo(P[n * 3 - 3], P[n * 3 - 2]);
     x.stroke(); x.globalAlpha = 1; return;
   }
-  if (n === 1) { x.beginPath(); x.arc(P[0], P[1], qw(s.w, P[2]) / 2, 0, 6.2832); x.fill(); return; }
-  let sx = P[0], sy = P[1], cw = -1;
-  x.beginPath(); x.moveTo(sx, sy);
-  for (let i = 1; i < n; i++) {
-    const px = P[i * 3], py = P[i * 3 + 1], w = qw(s.w, (P[i * 3 - 1] + P[i * 3 + 2]) / 2), last = i === n - 1;
-    if (w !== cw) { if (cw > 0) { x.lineWidth = cw; x.stroke(); x.beginPath(); x.moveTo(sx, sy); } cw = w; }
-    if (last) { x.lineTo(px, py); sx = px; sy = py; }
-    else { const ex = (px + P[i * 3 + 3]) / 2, ey = (py + P[i * 3 + 4]) / 2; x.quadraticCurveTo(px, py, ex, ey); sx = ex; sy = ey; }
-  }
-  x.lineWidth = cw; x.stroke();
+  x.fill(penPath(P, s.w));
 }
-function piece(x, s, i){
-  const P = s.pts, sx = i === 1 ? P[0] : (P[i * 3 - 3] + P[i * 3]) / 2, sy = i === 1 ? P[1] : (P[i * 3 - 2] + P[i * 3 + 1]) / 2;
-  x.lineWidth = qw(s.w, (P[i * 3 - 1] + P[i * 3 + 2]) / 2); x.beginPath(); x.moveTo(sx, sy);
-  x.quadraticCurveTo(P[i * 3], P[i * 3 + 1], (P[i * 3] + P[i * 3 + 3]) / 2, (P[i * 3 + 1] + P[i * 3 + 4]) / 2); x.stroke();
+/* Stift-Strich als eine glatte, gefüllte Fläche: Dicke folgt dem (geglätteten) Stiftdruck weich, Ränder als Kurven,
+   runde Enden – keine Stufen und Nähte wie bei vielen einzelnen Linienstücken */
+function penPath(P, w, extra){
+  const n0 = P.length / 3, n = n0 + (extra ? extra.length / 3 : 0), path = new Path2D();
+  if (!n0) return path;
+  const X = i => i < n0 ? P[i * 3] : extra[(i - n0) * 3], Y = i => i < n0 ? P[i * 3 + 1] : extra[(i - n0) * 3 + 1], Pr = i => i < n0 ? P[i * 3 + 2] : extra[(i - n0) * 3 + 2];
+  const R = new Array(n); let pr = Pr(0);
+  for (let i = 0; i < n; i++) { pr = i ? pr * .7 + Pr(i) * .3 : pr; R[i] = w * (.42 + .78 * Math.min(pr, 1)) / 2; }
+  if (n === 1) { path.arc(X(0), Y(0), R[0], 0, 6.2832); return path; }
+  const L = [], Rt = [], A = [];
+  for (let i = 0; i < n; i++) {
+    const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1); let dx = X(b) - X(a), dy = Y(b) - Y(a); const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const nx = -dy * R[i], ny = dx * R[i]; L.push([X(i) + nx, Y(i) + ny]); Rt.push([X(i) - nx, Y(i) - ny]); A.push(Math.atan2(dx, -dy));
+  }
+  const side = (S, rev) => { const m = S.length, g = k => S[rev ? m - 1 - k : k]; for (let k = 1; k < m - 1; k++) { const c = g(k), d = g(k + 1); path.quadraticCurveTo(c[0], c[1], (c[0] + d[0]) / 2, (c[1] + d[1]) / 2); } path.lineTo(g(m - 1)[0], g(m - 1)[1]); };
+  path.moveTo(L[0][0], L[0][1]); side(L, false);
+  path.arc(X(n - 1), Y(n - 1), R[n - 1], A[n - 1], A[n - 1] - Math.PI, true);
+  side(Rt, true);
+  path.arc(X(0), Y(0), R[0], A[0] + Math.PI, A[0], true);
+  path.closePath(); return path;
 }
 function moveStroke(s, dx, dy){ const P = s.pts; for (let i = 0; i < P.length; i += 3) { P[i] += dx; P[i + 1] += dy; } s.bb[0] += dx; s.bb[2] += dx; s.bb[1] += dy; s.bb[3] += dy; }
 function drawTpl(x, pm, k){
@@ -1817,9 +1824,8 @@ function liveDraw(){
   if (DR.s) {
     const s = DR.s, n = s.pts.length / 3;
     if (s.t === "h") { ctxOf(DR.p, ED.live); drawStroke(x, s); return; }
-    x.strokeStyle = x.fillStyle = s.c; x.lineCap = x.lineJoin = "round";
-    if (!DR.dot) { DR.dot = true; x.beginPath(); x.arc(s.pts[0], s.pts[1], qw(s.w, s.pts[2]) / 2, 0, 6.2832); x.fill(); }
-    for (let i = DR.drawn + 1; i <= n - 2; i++) { piece(x, s, i); DR.drawn = i; }
+    /* ganzen Strich in jedem Bild neu zeichnen – genau so, wie er nach dem Absetzen aussieht; dazu die vom System vorhergesagten nächsten Punkte (kleinerer Abstand zur Stiftspitze) */
+    ctxOf(DR.p, ED.live); x.fillStyle = s.c; x.fill(penPath(s.pts, s.w, DR.pred));
   } else if (DR.poly) {
     const P = DR.poly, sc = DR.p.sc; ctxOf(DR.p, ED.live);
     x.lineWidth = 1.6 / sc; x.setLineDash([6 / sc, 5 / sc]); x.strokeStyle = "#2962FF"; x.fillStyle = "rgba(41,98,255,.06)";
@@ -1854,8 +1860,10 @@ function onMove(e){
   e.preventDefault();
   let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null; if (!evs || !evs.length) evs = [e];
   if (DR.s) {
-    const P = DR.s.pts, m2 = DR.minD * DR.minD;
-    for (const ev of evs) { const pt = unitPt(ev, DR), n = P.length, dx = pt.x - P[n - 3], dy = pt.y - P[n - 2]; if (dx * dx + dy * dy < m2) { P[n - 1] = Math.max(P[n - 1], pt.pr); continue; } P.push(pt.x, pt.y, pt.pr); }
+    const P = DR.s.pts, m2 = DR.minD * DR.minD, sm = DR.s.t === "p" ? .62 : 1; /* sm: leichte Glättung gegen Zittern */
+    for (const ev of evs) { const pt = unitPt(ev, DR), n = P.length, x = P[n - 3] + (pt.x - P[n - 3]) * sm, y = P[n - 2] + (pt.y - P[n - 2]) * sm, dx = x - P[n - 3], dy = y - P[n - 2]; if (dx * dx + dy * dy < m2) { P[n - 1] = Math.max(P[n - 1], pt.pr); continue; } P.push(x, y, pt.pr); DR.raw = pt; }
+    DR.pred = null;
+    if (DR.s.t === "p") { const pe = e.getPredictedEvents ? e.getPredictedEvents() : []; const q = []; if (DR.raw) q.push(DR.raw.x, DR.raw.y, DR.raw.pr); for (const ev of pe.slice(0, 3)) { const pt = unitPt(ev, DR); q.push(pt.x, pt.y, pt.pr); } if (q.length) DR.pred = q; }
     schedLive();
   } else if (DR.removed) { for (const ev of evs) { const pt = unitPt(ev, DR); eraseSeg(DR.last, pt); DR.last = pt; } ecur(e); }
   else if (DR.poly) { for (const ev of evs) { const pt = unitPt(ev, DR); DR.poly.push(pt.x, pt.y); } schedLive(); }
@@ -1867,7 +1875,7 @@ function onUp(e){
   const d = DR; DR = null; if (liveQ) { cancelAnimationFrame(liveQ); liveQ = 0; }
   const p = d.p;
   if (d.s) {
-    const s = d.s; bbox(s); p.strokes.push(s);
+    const s = d.s; if (d.raw && s.t === "p") { const P = s.pts, n = P.length; if (Math.hypot(d.raw.x - P[n - 3], d.raw.y - P[n - 2]) > .05) P.push(d.raw.x, d.raw.y, d.raw.pr); } bbox(s); p.strokes.push(s);
     if (s.t === "h") drawInk(p); else if (p.ink.width) { const x = p.ink.getContext("2d"), r = p.reg, res = p.ink.width / r.w, k = res * p.sc; x.setTransform(k, 0, 0, k, -r.x * res, -r.y * res); drawStroke(x, s); }
     clearLive(); pushUndo({ t: "add", pid: p.id, s: [s] }); markDirty(p);
   } else if (d.removed) { $("#ecur").hidden = true; if (d.removed.length) { pushUndo({ t: "del", pid: p.id, items: d.removed }); markDirty(p); } }
