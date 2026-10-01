@@ -1861,25 +1861,43 @@ function playIntro(from){
     { offset: .25, opacity: 1 },
     { opacity: 1, transform: "scale(1) rotate(-2deg)" }
   ], { delay: FALL - 30, duration: 560 });
-  /* 3) Der Stift kritzelt das S des Icons auf die Seite: Tinte zeichnet sich, die Stiftspitze folgt genau der Linie */
-  const W0 = 760, SPEED = .5, GAP = 90; /* SPEED = Seiten-Einheiten pro ms (ruhig) */
-  const pts = [], tipAt = (x, y) => `translate3d(${(x * k - PEN_W / 2).toFixed(1)}px,${(y * k - PEN_H).toFixed(1)}px,0) rotate(24deg)`;
-  let t = W0;
+  /* 3) Der Stift kritzelt das S des Icons auf die Seite. Tinte und Stiftspitze werden in JEDEM Bild gemeinsam aus derselben Uhr
+     berechnet (nicht als zwei getrennte Animationen) – sonst läuft auf dem iPad die Tinte dem Stift hinterher, wenn die App
+     gleichzeitig lädt. pathLength=1: Länge der Tinte unabhängig davon, wie der Browser die Pfadlänge misst. */
+  const W0 = 760, SPEED = .5, GAP = 90; /* SPEED = Seiten-Einheiten pro ms */
+  const clk = document.createElement("i"); clk.hidden = true; ov.appendChild(clk);
+  const clockA = A(clk, [{ opacity: 0 }, { opacity: 1 }], { duration: 60000, fill: "none" }); /* gemeinsame Uhr, läuft im Takt aller anderen Animationen */
+  const tipAt = (x, y) => `translate3d(${(x * k - PEN_W / 2).toFixed(1)}px,${(y * k - PEN_H).toFixed(1)}px,0) rotate(24deg)`;
+  const segs = []; let t = W0;
   ink.forEach((p, i) => {
     if (i) t += GAP;
-    const len = p.getTotalLength(), dur = len / SPEED / sketch[i].f;
-    p.style.strokeDasharray = len + " " + (len + 2);
-    A(p, [{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { delay: t, duration: dur, easing: "linear" });
-    const n = Math.max(4, Math.round(len / 1.5)); /* dicht abtasten, damit die Spitze auch den Schlaufen folgt */
-    for (let j = 0; j <= n; j++) { const q = p.getPointAtLength(len * j / n); pts.push({ t: t + dur * j / n, x: q.x, y: q.y }); }
-    t += dur;
+    const len = p.getTotalLength(), dur = len / SPEED / sketch[i].f, n = Math.max(4, Math.round(len / 1.5)), sp = [];
+    for (let j = 0; j <= n; j++) { const q = p.getPointAtLength(len * j / n); sp.push([q.x, q.y]); }
+    p.setAttribute("pathLength", "1"); p.style.strokeDasharray = "1 3"; p.style.strokeDashoffset = "1.05";
+    segs.push({ p, t0: t, dur, sp }); t += dur;
   });
-  const T1 = t, first = pts[0], last = pts[pts.length - 1], span = T1 + 280 - (W0 - 180);
-  const penKf = [{ offset: 0, opacity: 0, transform: tipAt(first.x + 40, first.y - 45), easing: "cubic-bezier(.3,0,.3,1)" }, { offset: 180 / span, opacity: 1, transform: tipAt(first.x, first.y), easing: "linear" }];
-  pts.forEach(p => penKf.push({ offset: Math.min(1, (p.t - (W0 - 180)) / span), opacity: 1, transform: tipAt(p.x, p.y) }));
-  penKf.push({ offset: 1, opacity: 0, transform: tipAt(last.x + 45, last.y - 60) });
-  for (let i = 1; i < penKf.length; i++) if (penKf[i].offset < penKf[i - 1].offset) penKf[i].offset = penKf[i - 1].offset;
-  A(pen, penKf, { delay: W0 - 180, duration: span, easing: "linear" });
+  const T1 = t, first = segs[0].sp[0], lastSp = segs[segs.length - 1].sp, last = lastSp[lastSp.length - 1];
+  const cl01 = x => x < 0 ? 0 : x > 1 ? 1 : x, smooth = x => x * x * (3 - 2 * x), lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+  const at = (sp, u) => { const f = u * (sp.length - 1), i = Math.min(sp.length - 2, Math.floor(f)); return lerp(sp[i], sp[i + 1], f - i); };
+  pen.style.opacity = "0";
+  const penFrame = () => {
+    if (done || !ov.isConnected) return;
+    const c = clockA.currentTime;
+    if (c != null) {
+      segs.forEach(g => { const u = cl01((c - g.t0) / g.dur); g.p.style.strokeDashoffset = u <= 0 ? "1.05" : String(1 - u); });
+      let pos, op = 1;
+      if (c < W0) { const a = cl01((c - (W0 - 180)) / 180); pos = lerp([first[0] + 40, first[1] - 45], first, smooth(a)); op = a; }
+      else if (c >= T1) { const a = cl01((c - T1) / 280); pos = lerp(last, [last[0] + 45, last[1] - 60], smooth(a)); op = 1 - a; }
+      else {
+        const gi = segs.findIndex(g => c < g.t0 + g.dur), g = segs[gi];
+        pos = c >= g.t0 ? at(g.sp, (c - g.t0) / g.dur) : lerp(segs[gi - 1].sp[segs[gi - 1].sp.length - 1], g.sp[0], smooth((c - (g.t0 - GAP)) / GAP));
+      }
+      pen.style.opacity = String(op); pen.style.transform = tipAt(pos[0], pos[1]);
+      if (c > T1 + 300) return;
+    }
+    requestAnimationFrame(penFrame);
+  };
+  requestAnimationFrame(penFrame);
   /* 4) Während der Stift zeichnet, springt die Kugel vom Aufprall in einem Bogen hoch, hüpft einmal auf die Oberkante
      der Notizseite und fällt dann, sobald der Stift fertig ist, mitten ins gekritzelte S (nie Stillstand in der Luft) */
   /* Flugzeiten wie bei einem echten Ball: Steig- und Fallzeit ∝ √Höhe */
