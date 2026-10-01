@@ -4,7 +4,7 @@ Scribo: eigenständige Notizen-Web-App (PWA), gehört zum Cardo-Ökosystem, für
 
 ## Arbeitsweise (Wünsche des Nutzers)
 - Sprache: Deutsch, kurz und verständlich (kein Fachjargon ohne Erklärung).
-- „Frag nicht immer, sondern mach.“ Änderungen direkt umsetzen, testen, committen und pushen. Nur bei echten Richtungsentscheidungen kurz fragen.
+- „Frag nicht immer, sondern mach.“ Änderungen direkt umsetzen, testen, committen und pushen. Pushen macht Claude selbst über GitHub Desktop (Computer-Steuerung: Repo oben links wählen → „Push origin“ klicken); im Terminal gibt es keine GitHub-Zugangsdaten. Der Nutzer will dafür nicht selbst klicken. Nur bei echten Richtungsentscheidungen kurz fragen.
 - Nach jeder Änderung: in 2–4 Sätzen sagen, was sich geändert hat und was auf dem echten Gerät noch zu prüfen ist.
 
 ## Dateien
