@@ -29,3 +29,4 @@ Scribo: eigenständige Notizen-Web-App (PWA), gehört zum Cardo-Ökosystem, für
 ## Entscheidungen des Nutzers
 - App heißt **Scribo** (Stand 30.09.2026). Icon vom Nutzer vorgegeben (S + oranger Punkt), Schatten ergänzt.
 - Notizen-Struktur: Fach → Unterordner nach Thema; Art (Vorlesung/Tutorium/Übung/Sonstiges) als Etikett, nicht als Ordner. Im Fach erscheinen alle Notizen der Unterordner gesammelt.
+- Startanimation nur beim ersten Öffnen nach der Installation (nicht angemeldet, `scribo-intro-seen` fehlt), nicht überspringbar, endet im Anmeldebildschirm; Aufbau/Farben wie Cardos Intro: S dreht sich halb, Kugel fliegt hoch → fällt auf eine dunkle Notizseite, Stift kritzelt das S (runter–hoch–runter mit Schlaufen), Kugel hüpft währenddessen auf der Oberkante → fällt ins S, beim Aufprall entsteht das Icon (vom Nutzer als „perfekt“ abgenommen, 01.10.2026). Testen mit `?intro`.

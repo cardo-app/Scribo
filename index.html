@@ -339,6 +339,36 @@ select.in{-webkit-appearance:none;appearance:none;background-image:linear-gradie
 .auth-form{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
 .auth-msg{font-size:14.5px;margin:12px 2px 0;min-height:1em}
 .loading{padding:40vh 0 0;text-align:center;color:var(--muted);font-weight:600}
+/* ---------- Startanimation beim ersten Öffnen nach der Installation (Aufbau, Farben und Zeiten wie bei Cardo) ---------- */
+#splash{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#fff;overflow:hidden;box-shadow:0 260px 0 #fff;transition:opacity .35s ease,visibility .35s}
+#splash.out{opacity:0;visibility:hidden;pointer-events:none}
+html:has(> body > #splash),html:has(> body > #intro:not(.out)){background:#fff!important}
+.sp-stage{position:relative;z-index:1;width:112px;height:112px;will-change:transform;animation:spRot .85s cubic-bezier(.42,0,.2,1) .05s forwards}
+.sp-stage svg{width:112px;height:112px;display:block;overflow:visible}
+.sp-l{position:absolute;inset:0;will-change:transform,opacity}
+.sp-arc{transform-origin:50% 50%;animation:spArcOut .55s ease 1s forwards}
+.sp-dot{animation:spHide 0s linear .9s forwards}
+.sp-ball{position:absolute;z-index:2;left:calc(50% - 7.875px);top:calc(50% - 7.875px);width:15.75px;height:15.75px;border-radius:50%;background:radial-gradient(75% 75% at 38% 32%,#FF7A55,#F2491F);opacity:0;will-change:transform;animation:spLaunch .85s cubic-bezier(.3,.62,.5,1) .9s forwards}
+.sp-ball::after{content:"";position:absolute;inset:-9px;border-radius:50%;background:radial-gradient(circle,rgba(255,90,54,.55) 0,rgba(255,90,54,.18) 45%,transparent 70%);opacity:0;animation:spGlow .6s ease 1.2s forwards}
+@keyframes spRot{to{transform:rotate(-180deg)}} /* halbe Drehung: danach steht das S wieder genauso da */
+@keyframes spArcOut{to{opacity:0;transform:scale(.88)}}
+@keyframes spHide{to{opacity:0}}
+@keyframes spGlow{to{opacity:1}}
+@keyframes spLaunch{0%{opacity:1;transform:translate3d(0,0,0) scale(1)}100%{opacity:1;transform:translate3d(0,calc(7.875px - 38vh),0) scale(.65)}}
+#intro{position:fixed;inset:0;z-index:210;overflow:hidden;touch-action:none;background:#fff;box-shadow:0 260px 0 #fff;animation:inIn .35s ease both}
+#intro .in-page{position:absolute;z-index:1;border-radius:14px;background:#1B1D23;box-shadow:0 14px 28px -12px rgba(27,29,35,.55);opacity:0;will-change:transform,opacity}
+#intro .in-page>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#intro .in-pen{position:absolute;left:0;top:0;z-index:2;transform-origin:50% 100%;opacity:0;will-change:transform,opacity;filter:drop-shadow(3px 6px 5px rgba(0,0,0,.35))}
+#intro .in-pen svg{width:100%;height:100%;display:block}
+#intro .in-mark{position:absolute;z-index:6;background:#fff;opacity:0;will-change:transform,opacity}
+#intro .in-mark svg{width:100%;height:100%;display:block}
+#intro .in-ball{position:absolute;z-index:7;border-radius:50%;background:radial-gradient(75% 75% at 38% 32%,#FF7A55,#F2491F);will-change:transform}
+#intro .in-ball::after{content:"";position:absolute;inset:-57%;border-radius:50%;background:radial-gradient(circle,rgba(255,90,54,.55) 0,rgba(255,90,54,.18) 45%,transparent 70%);animation:inGlowOut .5s ease forwards} /* Leuchten der Startkugel klingt sanft aus statt zu verschwinden */
+@keyframes inGlowOut{to{opacity:0}}
+#intro.out{transition:background-color .55s ease,box-shadow .55s ease;background-color:transparent;box-shadow:0 260px 0 transparent}
+#intro.out .in-page{transition:opacity .55s ease;opacity:0!important}
+#intro.out .in-mark{transition:opacity .3s ease .3s;opacity:0!important}
+@keyframes inIn{from{opacity:0}to{opacity:1}}
 
 /* ---------- Editor (Schreiben mit dem Stift) ---------- */
 body.editing #main{display:none}
@@ -411,6 +441,9 @@ body.editing #main{display:none}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="sp-stage"><div class="sp-l sp-arc"><svg viewBox="0 0 512 512"><defs><mask id="sma" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect width="512" height="512" fill="#fff"/><circle cx="256" cy="256" r="41" fill="#000"/></mask><filter id="ssa" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter></defs><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#ssa)"><g mask="url(#sma)" fill="none" stroke="#1E1F24" stroke-width="50" stroke-linecap="round"><path d="M332.17 165.22A118.5 118.5 0 0 0 179.83 165.22C137.70 200.58 186.00 256.00 256 256"/><path d="M179.83 346.78A118.5 118.5 0 0 0 332.17 346.78C374.30 311.42 326.00 256.00 256 256"/></g></g></g></svg></div><div class="sp-l sp-dot"><svg viewBox="0 0 512 512"><defs><filter id="ssb" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter><radialGradient id="sdb" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FF7A55"/><stop offset="1" stop-color="#F2491F"/></radialGradient></defs><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#ssb)"><circle cx="256" cy="256" r="29" fill="url(#sdb)"/></g></g></svg></div></div><div class="sp-ball"></div></div>
+<script>/* Startanimation nur beim ersten Öffnen nach der Installation (noch nie gesehen, nicht angemeldet); ?intro zeigt sie zum Testen immer */
+(function(){var el=document.getElementById("splash"),q=location.search,on=false;try{on=/[?&]intro\b/.test(q)||(!/[?&]local\b/.test(q)&&!localStorage.getItem("scribo-intro-seen")&&!localStorage.getItem("sb-rormgkvthvisrctcsjrg-auth-token")&&!matchMedia("(prefers-reduced-motion: reduce)").matches)}catch(e){}if(on)document.body.classList.add("splashing");else el.remove()})();</script>
 <div id="main"><div class="loading">Einen Moment …</div></div>
 <div id="ed" hidden></div>
 <div id="sheet" hidden></div>
@@ -459,7 +492,7 @@ const IC = {
   hl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-2 2v3h3l2-2"/><path d="M9 14l7.5-7.5a2.1 2.1 0 0 1 3 3L12 17z"/><path d="M4 21h7"/></svg>',
   er:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 20H20M5.2 15.3l9.9-9.9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L12 18.5a4 4 0 0 1-2.8 1.2H8a2 2 0 0 1-1.4-.6l-1.4-1.4a1.7 1.7 0 0 1 0-2.4z"/><path d="M9.5 11l5 5"/></svg>',
   lasso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 2.6"><path d="M12 4c5 0 9 2.5 9 6s-4 6-9 6-9-2.5-9-6 4-6 9-6z"/><path d="M7 15.5c-1 1.5-1 3 .5 4.5" stroke-dasharray="none"/></svg>',
-  logo:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><mask id="lgm" maskUnits="userSpaceOnUse" x="0" y="0"><rect fill="#fff"/><circle cx="256" cy="256" r="41" fill="#000"/></mask><filter id="lgs" filterUnits="userSpaceOnUse" x="0" y="0"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter><radialGradient id="lgd" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FF7A55"/><stop offset="1" stop-color="#F2491F"/></radialGradient></defs><rect fill="#FFFFFF"/><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#lgs)"><g mask="url(#lgm)" fill="none" stroke="#1E1F24" stroke-width="50" stroke-linecap="round"><path d="M332.17 165.22A118.5 118.5 0 0 0 179.83 165.22C137.70 200.58 186.00 256.00 256 256"/><path d="M179.83 346.78A118.5 118.5 0 0 0 332.17 346.78C374.30 311.42 326.00 256.00 256 256"/></g><circle cx="256" cy="256" r="29" fill="url(#lgd)"/></g></g></svg>'
+  logo:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><mask id="lgm" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect width="512" height="512" fill="#fff"/><circle cx="256" cy="256" r="41" fill="#000"/></mask><filter id="lgs" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter><radialGradient id="lgd" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FF7A55"/><stop offset="1" stop-color="#F2491F"/></radialGradient></defs><rect fill="#FFFFFF"/><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#lgs)"><g mask="url(#lgm)" fill="none" stroke="#1E1F24" stroke-width="50" stroke-linecap="round"><path d="M332.17 165.22A118.5 118.5 0 0 0 179.83 165.22C137.70 200.58 186.00 256.00 256 256"/><path d="M179.83 346.78A118.5 118.5 0 0 0 332.17 346.78C374.30 311.42 326.00 256.00 256 256"/></g><circle cx="256" cy="256" r="29" fill="url(#lgd)"/></g></g></svg>'
 };
 
 /* ---------- Meldungen, Blätter, Menüs ---------- */
@@ -1760,15 +1793,146 @@ async function start(){
   pull();
   if (SB) { DB.loadMeta().catch(e => { console.warn(e); setSync("err"); }); DB.flush(); DB.flushFiles(); fetchCardoLook(); }
 }
+/* ---------- Startanimation beim ersten Öffnen: Kugel fliegt hoch → fällt auf eine Notizseite, ein Stift kritzelt das S darauf → die Kugel fällt ins S, beim Aufprall entsteht das Icon → Logo gleitet in die Anmeldung (Aufbau und Farben wie bei Cardo) ---------- */
+const INTRO_KEY = "scribo-intro-seen", splashStart = performance.now();
+let splashGone = false;
+function hideSplash(auth){
+  if (splashGone) return; splashGone = true;
+  const el = document.getElementById("splash"); if (!el) return;
+  const out = () => { el.classList.add("out"); document.body.classList.remove("splashing"); setTimeout(() => el.remove(), 400); };
+  if (!auth || !el.animate) { out(); return; }
+  /* Das Intro beginnt genau im Umkehrpunkt der hochfliegenden Kugel (Ende ihrer Animation) → kein Stillstand, kein Ruck */
+  const ball = el.querySelector(".sp-ball"); let go = false;
+  const start = () => { if (go) return; go = true; playIntro(ball); setTimeout(() => { el.remove(); document.body.classList.remove("splashing"); }, 450); };
+  const la = ball && ball.getAnimations && ball.getAnimations().find(a => a.animationName === "spLaunch");
+  if (la && la.finished) la.finished.then(start, start);
+  setTimeout(start, Math.max(0, 1900 - (performance.now() - splashStart)));
+}
+setTimeout(() => hideSplash(false), 6000); /* Notbremse */
+function playIntro(from){
+  const W = innerWidth, H = innerHeight, cx = W / 2, cy = H * .47;
+  const PW = Math.round(Math.min(W * .46, 190)), PH = Math.round(PW * 1.3), TS = Math.round(Math.min(W * .3, 120)), BD = 22, k = PW / 100;
+  const PEN_H = Math.round(PW * .9), PEN_W = Math.round(PEN_H * 24 / 140);
+  const ov = document.createElement("div"); ov.id = "intro"; ov.setAttribute("aria-hidden", "true");
+  ov.innerHTML = `<div class="in-page"><svg viewBox="0 0 100 130" preserveAspectRatio="none"><g stroke="rgba(255,255,255,.07)" stroke-width=".8">${[55, 71, 87, 103, 119].map(y => `<path d="M8 ${y}H92"/>`).join("")}</g><g class="in-ink" fill="none" stroke-linecap="round" stroke-linejoin="round"></g></svg>`
+    + `<div class="in-pen"><svg viewBox="0 0 24 140"><rect x="5" y="0" width="14" height="22" rx="7" fill="#1E1F24"/><rect x="5" y="16" width="14" height="88" fill="#F4F5F7"/><rect x="5" y="20" width="14" height="5" fill="#FF5A36"/><path d="M5 104L12 133L19 104z" fill="#D5D8DF"/><path d="M10.2 125.5L12 140L13.8 125.5z" fill="#1E1F24"/></svg></div></div>`
+    + `<div class="in-mark"><svg viewBox="0 0 512 512"><defs><mask id="inm" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect width="512" height="512" fill="#fff"/><circle cx="256" cy="256" r="41" fill="#000"/></mask><filter id="ins" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter><radialGradient id="ind" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FF7A55"/><stop offset="1" stop-color="#F2491F"/></radialGradient></defs><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#ins)"><g mask="url(#inm)" fill="none" stroke="#1E1F24" stroke-width="50" stroke-linecap="round"><path d="M332.17 165.22A118.5 118.5 0 0 0 179.83 165.22C137.70 200.58 186.00 256.00 256 256"/><path d="M179.83 346.78A118.5 118.5 0 0 0 332.17 346.78C374.30 311.42 326.00 256.00 256 256"/></g><circle cx="256" cy="256" r="29" fill="url(#ind)" opacity="0"/></g></g></svg></div><div class="in-ball"></div>`;
+  document.body.appendChild(ov);
+  const page = ov.querySelector(".in-page"), pen = ov.querySelector(".in-pen");
+  const mk = ov.querySelector(".in-mark"), sArcs = [...mk.querySelectorAll("g[mask] path")], dotEl = mk.querySelector('circle[fill^="url"]'), ball = ov.querySelector(".in-ball");
+  /* Gekritzeltes S für die Notizseite: Mittellinie des Icon-S (oben rechts → Mitte → unten links) mit leichtem Zittern */
+  const SK = 1.24 * 100 / 512, /* gleiche Größe wie das S der Kachel, wenn die Seite auf Kachelgröße schrumpft */ PX = x => 50 + (x - 256) * SK, PY = y => 65 + (y - 256) * SK, cl = [];
+  const [up, lo] = sArcs, lu = up.getTotalLength(), ll = lo.getTotalLength();
+  for (let i = 0; i <= 50; i++) { const q = up.getPointAtLength(lu * i / 50); cl.push([q.x, q.y]); }
+  for (let i = 49; i >= 0; i--) { const q = lo.getPointAtLength(ll * i / 50); cl.push([q.x, q.y]); }
+  const wob = (ph, amp, a0 = 0, a1 = 1) => cl.slice(Math.round(a0 * cl.length), Math.round(a1 * cl.length)).map(([x, y], i) => [PX(x) + (Math.sin(i * .31 + ph) * .6 + Math.sin(i * .13 + ph * 2.3) * .4) * amp, PY(y) + Math.cos(i * .27 + ph) * amp * .8]);
+  /* Kritzeln: in einem Zug runter, wieder hoch und nochmal runter, mit kleinen Schlaufen wie beim schnellen Krakeln */
+  const curl = (ps, r, w) => ps.map(([x, y], i) => [x + Math.cos(i * w) * r, y + Math.sin(i * w) * r]);
+  const scrib = [...curl(wob(.7, 1.2), 1.5, 1.25), ...wob(2.9, 2.3).reverse(), ...curl(wob(5.1, 1.6, 0, .96), 1.1, .9)];
+  const toD = ps => "M" + ps.map(q => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L");
+  const sketch = [{ d: toD(scrib), w: 2.5, c: "#fff", f: 1 }];
+  page.querySelector(".in-ink").innerHTML = sketch.map(l => `<path d="${l.d}" stroke="${l.c}" stroke-width="${l.w}"/>`).join("");
+  const ink = [...page.querySelectorAll(".in-ink path")];
+  let done = false; const anims = [], timers = [];
+  const end = () => {
+    if (done) return; done = true; timers.forEach(clearTimeout);
+    try { localStorage.setItem(INTRO_KEY, "1"); } catch {}
+    ov.classList.add("out"); setTimeout(() => { anims.forEach(a => { try { a.cancel(); } catch {} }); ov.remove(); }, 650);
+    /* Übergang in die Anmeldung: Titel, Text, Umschalter und Formular gleiten nacheinander von unten ein */
+    document.querySelectorAll(".auth-logo h1,.auth-logo p,.auth-seg,.auth-form").forEach((e, i) => { try { e.animate([{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duration: 560, delay: 80 + i * 80, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards" }); } catch {} });
+  };
+  const A = (el, kf, o) => { const a = el.animate(kf, Object.assign({ fill: "both" }, o)); try { a.persist(); } catch {} anims.push(a); return a; }; /* persist: sonst entfernt der Browser fertige Animationen, sobald eine spätere dieselbe Eigenschaft hat */
+  const place = (el, w, h) => Object.assign(el.style, { left: cx - w / 2 + "px", top: cy - h / 2 + "px", width: w + "px", height: h + "px" });
+  place(page, PW, PH); place(mk, TS, TS); mk.style.borderRadius = TS * 19 / 84 + "px"; place(ball, BD, BD);
+  Object.assign(pen.style, { width: PEN_W + "px", height: PEN_H + "px" });
+  let s0 = { x: cx, y: H * .12, d: 10 };
+  if (from) { const b = from.getBoundingClientRect(); if (b.width) s0 = { x: b.left + b.width / 2, y: b.top + b.height / 2, d: b.width }; from.style.visibility = "hidden"; }
+  const k0 = s0.d / BD, T = (x, y, sx = 1, sy = sx) => `translate3d(${x}px,${y}px,0) scale(${sx},${sy})`;
+  /* 1) Kugel fällt und prallt auf die Stelle, an der die Seite erscheint */
+  const FALL = 520;
+  A(ball, [
+    { transform: T(s0.x - cx, s0.y - cy, k0), easing: "cubic-bezier(.5,0,.75,.38)" },
+    { offset: .9, transform: T(0, -BD * .3, .92, 1.18) },
+    { transform: T(0, 0, 1, 1) }
+  ], { duration: FALL });
+  /* 2) Die Notizseite springt auf */
+  A(page, [
+    { opacity: 0, transform: "scale(.2) rotate(-6deg)", easing: "cubic-bezier(.2,.9,.3,1.2)" },
+    { offset: .25, opacity: 1 },
+    { opacity: 1, transform: "scale(1) rotate(-2deg)" }
+  ], { delay: FALL - 30, duration: 560 });
+  /* 3) Der Stift kritzelt das S des Icons auf die Seite: Tinte zeichnet sich, die Stiftspitze folgt genau der Linie */
+  const W0 = 760, SPEED = .5, GAP = 90; /* SPEED = Seiten-Einheiten pro ms (ruhig) */
+  const pts = [], tipAt = (x, y) => `translate3d(${(x * k - PEN_W / 2).toFixed(1)}px,${(y * k - PEN_H).toFixed(1)}px,0) rotate(24deg)`;
+  let t = W0;
+  ink.forEach((p, i) => {
+    if (i) t += GAP;
+    const len = p.getTotalLength(), dur = len / SPEED / sketch[i].f;
+    p.style.strokeDasharray = len + " " + (len + 2);
+    A(p, [{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { delay: t, duration: dur, easing: "linear" });
+    const n = Math.max(4, Math.round(len / 1.5)); /* dicht abtasten, damit die Spitze auch den Schlaufen folgt */
+    for (let j = 0; j <= n; j++) { const q = p.getPointAtLength(len * j / n); pts.push({ t: t + dur * j / n, x: q.x, y: q.y }); }
+    t += dur;
+  });
+  const T1 = t, first = pts[0], last = pts[pts.length - 1], span = T1 + 280 - (W0 - 180);
+  const penKf = [{ offset: 0, opacity: 0, transform: tipAt(first.x + 40, first.y - 45), easing: "cubic-bezier(.3,0,.3,1)" }, { offset: 180 / span, opacity: 1, transform: tipAt(first.x, first.y), easing: "linear" }];
+  pts.forEach(p => penKf.push({ offset: Math.min(1, (p.t - (W0 - 180)) / span), opacity: 1, transform: tipAt(p.x, p.y) }));
+  penKf.push({ offset: 1, opacity: 0, transform: tipAt(last.x + 45, last.y - 60) });
+  for (let i = 1; i < penKf.length; i++) if (penKf[i].offset < penKf[i - 1].offset) penKf[i].offset = penKf[i - 1].offset;
+  A(pen, penKf, { delay: W0 - 180, duration: span, easing: "linear" });
+  /* 4) Während der Stift zeichnet, springt die Kugel vom Aufprall in einem Bogen hoch, hüpft einmal auf die Oberkante
+     der Notizseite und fällt dann, sobald der Stift fertig ist, mitten ins gekritzelte S (nie Stillstand in der Luft) */
+  /* Flugzeiten wie bei einem echten Ball: Steig- und Fallzeit ∝ √Höhe */
+  const TOP = -PH / 2, A1 = BD * 3.5, A2 = BD * 5, G = 28, sq = Math.sqrt;
+  const u1 = G * sq(PH / 2 + A1), d1 = G * sq(A1), u2 = G * sq(A2), d2 = G * sq(A2 + PH / 2);
+  /* so oft auf der Oberkante hüpfen, bis der Stift fertig ist; danach der letzte, höhere Bogen ins S */
+  const kL = 58 * SK * k / BD, kd = TS * 72 / 512 / BD, UP = "cubic-bezier(.33,.67,.67,1)", DOWN = "cubic-bezier(.33,0,.67,.33)";
+  const ev = [{ t: FALL, y: BD * .18, sx: 1.35, sy: .68 }, { t: FALL + u1, y: TOP - A1, apex: 1 }];
+  let te = FALL + u1 + d1; const HB = [BD * 3, BD * 2.4, BD * 2.8, BD * 2.2];
+  const land = () => { ev.push({ t: te - 18, y: TOP - BD * .6, sx: .92, sy: 1.12, lin: 1 }, { t: te, y: TOP - BD * .35, sx: 1.3, sy: .7 }); };
+  land();
+  for (let b = 0; te + u2 + d2 < T1 + 220 && b < 8; b++) { const h = HB[b % HB.length], hu = G * sq(h); ev.push({ t: te + hu, y: TOP - h, apex: 1 }); te += 2 * hu; land(); }
+  ev.push({ t: te + u2, y: TOP - A2, apex: 1 });
+  const L = te + u2 + d2, N = L - FALL, f = x => (x - FALL) / N;
+  A(ball, [
+    ...ev.map(q => ({ offset: f(q.t), transform: q.apex ? T(0, q.y, .96, 1.05) : T(0, q.y, q.sx, q.sy), easing: q.lin ? "linear" : q.apex ? DOWN : UP })),
+    { offset: 1 - 40 / N, transform: T(0, -BD * .15, kL * .9, kL * 1.15) },
+    { offset: 1, transform: T(0, 0, kL, kL) }
+  ], { delay: FALL, duration: L - FALL, fill: "forwards" });
+  /* 5) Beim Aufprall entsteht das richtige Icon: Seite schrumpft zur Kachel, das saubere S liegt genau auf dem Gekritzel, die Kugel wird zum Punkt */
+  const MG = "cubic-bezier(.3,1.25,.5,1)", MD = 440, big = PW / TS;
+  A(page, [
+    { opacity: 1, transform: "scale(1) rotate(-2deg)", easing: MG },
+    { offset: .55, opacity: 0 },
+    { opacity: 0, transform: `scale(${TS / PW}) rotate(0deg)` }
+  ], { delay: L, duration: MD, fill: "forwards" });
+  A(mk, [
+    { opacity: 0, transform: `scale(${big}) rotate(-2deg)`, easing: MG },
+    { offset: .4, opacity: 1 },
+    { opacity: 1, transform: "scale(1) rotate(0deg)" }
+  ], { delay: L, duration: MD });
+  A(ball, [
+    { transform: T(0, 0, kL * 1.3, kL * .72), easing: MG },
+    { transform: T(0, 0, kd, kd) }
+  ], { delay: L, duration: MD, fill: "forwards" });
+  timers.push(setTimeout(() => { dotEl.setAttribute("opacity", "1"); ball.style.visibility = "hidden"; }, L + MD));
+  /* 6) Das Logo gleitet an seinen Platz auf der Anmeldeseite */
+  const a = document.querySelector(".auth-mark"), r = a && a.getBoundingClientRect();
+  if (r && r.width) {
+    const tx = r.left + r.width / 2 - cx, ty = r.top + r.height / 2 - cy, ks = r.width / TS;
+    A(mk, [{ transform: "translate3d(0,0,0) scale(1)", easing: "cubic-bezier(.55,0,.25,1)" }, { transform: `translate3d(${tx}px,${ty}px,0) scale(${ks})` }], { delay: L + MD + 80, duration: 560, fill: "forwards", composite: "replace" });
+  }
+  timers.push(setTimeout(end, L + MD + 560));
+}
 function cachedUser(){ try { const t = JSON.parse(localStorage.getItem("sb-rormgkvthvisrctcsjrg-auth-token") || "null"), u = t && (t.user || (t.currentSession && t.currentSession.user)); return u && u.id ? u : null; } catch { return null; } }
 async function boot(){
-  if (LOCAL_ONLY) { USER = { id: "local" }; return start(); }
+  if (LOCAL_ONLY) { USER = { id: "local" }; hideSplash(false); return start(); }
   if (!window.supabase) { $("#main").innerHTML = '<div class="loading">Beim ersten Start braucht Scribo eine Internetverbindung.</div>'; return; }
   SB = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   SB.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") setTimeout(newPasswordSheet, 300); if (ev === "SIGNED_OUT" && USER) location.reload(); });
   const cu = cachedUser();
-  if (cu) { USER = cu; start(); SB.auth.getSession().then(({ data }) => { if (data && data.session) USER = data.session.user; }).catch(() => {}); return; }
-  try { const { data } = await SB.auth.getSession(); if (!data.session) { showAuth(); return; } USER = data.session.user; start(); }
+  if (cu) { USER = cu; hideSplash(false); start(); SB.auth.getSession().then(({ data }) => { if (data && data.session) USER = data.session.user; }).catch(() => {}); return; }
+  try { const { data } = await SB.auth.getSession(); if (!data.session) { showAuth(); hideSplash(true); return; } USER = data.session.user; start(); }
   catch { $("#main").innerHTML = '<div class="loading">Beim ersten Start braucht Scribo eine Internetverbindung.</div>'; }
 }
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
