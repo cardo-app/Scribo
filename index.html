@@ -229,7 +229,7 @@ button.set-item:hover{background:color-mix(in oklab,var(--ink) 4%,transparent)}
 .set-group{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:0 auto 18px;max-width:720px}
 .set-group h2{font-size:20px;font-weight:800;margin-bottom:2px}
 .set-group>p{margin:0 0 14px;color:var(--muted);font-size:15.5px}
-.set-top{max-width:720px;margin:0 auto}
+.set-top{max-width:720px;margin-left:auto;margin-right:auto}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:4px}
 .seg button{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 6px;border-radius:10px;font-weight:700;font-size:15.5px;color:var(--muted)}
 .seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -342,7 +342,7 @@ select.in{-webkit-appearance:none;appearance:none;background-image:linear-gradie
 /* ---------- Startanimation beim ersten Öffnen nach der Installation (Aufbau, Farben und Zeiten wie bei Cardo) ---------- */
 #splash{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#fff;overflow:hidden;box-shadow:0 260px 0 #fff;transition:opacity .35s ease,visibility .35s}
 #splash.out{opacity:0;visibility:hidden;pointer-events:none}
-html:has(> body > #splash),html:has(> body > #intro:not(.out)){background:#fff!important}
+html:has(> body.intro-day > #splash),html:has(> body.splash-quick > #splash),html:has(> body > #intro:not(.out)){background:#fff!important}
 .sp-stage{position:relative;z-index:1;width:112px;height:112px;will-change:transform;animation:spRot .85s cubic-bezier(.42,0,.2,1) .05s forwards}
 .sp-stage svg{width:112px;height:112px;display:block;overflow:visible}
 .sp-l{position:absolute;inset:0;will-change:transform,opacity}
@@ -438,13 +438,211 @@ body.editing #main{display:none}
 .ov canvas{width:100%;height:auto;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.16);background:#fff}
 .ov button.on{color:var(--accent-text)}
 .ov button.on canvas{box-shadow:0 0 0 3px var(--accent)}
+/* ================= Aus Cardo übernommen: Tab-Leiste, Seitenwischen, Einstellungen, Glas-Menüs (bei Änderungen in Cardo hier mitziehen) ================= */
+:root{--tc:0px}
+.peek{position:fixed;inset:0;z-index:5;visibility:hidden;will-change:transform;backface-visibility:hidden;contain:layout paint;background:var(--paper);overflow:hidden;pointer-events:none;padding-top:calc(env(safe-area-inset-top,0px) + var(--tc))}
+.peek .pgx{padding:18px 16px 110px;max-width:1120px;width:100%;margin:0 auto}
+@media (min-width:900px){ .peek .pgx{padding:32px 36px 120px} }
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;transition:none;display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+#tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--muted);padding:6px 0;position:relative}
+#tabs button.on{color:var(--accent-text)}
+#tabs svg{width:24px;height:24px;stroke-width:1.6;transform:scale(.84);transition:stroke-width .15s ease,transform .15s ease}
+#tabs button.on svg{stroke-width:2.9;transform:none}
+#tabs button.on span{font-weight:800}
+@media (prefers-reduced-motion:reduce){#tabs svg{transition:none}}
+@media (min-width:700px){
+  #tabs{left:50%;right:auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:400px;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:6px 8px}
+}
+:is(.set-item,#tabs button){transition:transform .22s cubic-bezier(.34,1.45,.55,1),background .15s ease,color .15s ease}
+:is(.set-item,#tabs button):active{transform:scale(.92);transition-duration:.08s}
+@keyframes tabIn{from{opacity:0;transform:translateY(8px) scale(.6)}to{opacity:1;transform:none}}
+#tabs.tabs-in button{animation:tabIn .42s cubic-bezier(.34,1.5,.55,1) both}
+#tabs.tabs-in button:nth-child(2){animation-delay:.05s}
+#tabs.tabs-in button:nth-child(3){animation-delay:.1s}
+#tabs{bottom:calc(0px - var(--vgap,0px))}
+@media (min-width:700px){#tabs{bottom:calc(16px + env(safe-area-inset-bottom,0px) - var(--vgap,0px))}}
+#splash,#intro,.peek,#sheet{bottom:calc(0px - var(--vgap,0px))}
+@media (max-width:699px){html.ios-standalone #tabs{padding-bottom:max(4px,calc(env(safe-area-inset-bottom,0px) - 18px))}}
+/* ---------- Liquid Glass: schwebende Tab-Leiste, durchscheinend (Test) ---------- */
+body{--gl-bg:color-mix(in srgb,var(--surface) 38%,transparent);--gl-edge:rgba(255,255,255,.75);--gl-rim:rgba(255,255,255,.55);--gl-pill:rgba(255,255,255,.28);--gl-spec:.85;--gl-caus:.45;--gl-deep:.10;--gl-drop:0 10px 30px rgba(20,22,30,.16),0 2px 6px rgba(20,22,30,.08)}
+@media (prefers-color-scheme:dark){body:not(.m-light){--gl-bg:color-mix(in srgb,var(--surface) 42%,transparent);--gl-edge:rgba(255,255,255,.22);--gl-rim:rgba(255,255,255,.14);--gl-pill:rgba(255,255,255,.07);--gl-spec:.30;--gl-caus:.20;--gl-deep:.35;--gl-drop:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3)}}
+body.m-dark{--gl-bg:color-mix(in srgb,var(--surface) 42%,transparent);--gl-edge:rgba(255,255,255,.22);--gl-rim:rgba(255,255,255,.14);--gl-pill:rgba(255,255,255,.07);--gl-spec:.30;--gl-caus:.20;--gl-deep:.35;--gl-drop:0 10px 30px rgba(0,0,0,.45),0 2px 6px rgba(0,0,0,.3)}
+#tabs{left:10px;right:10px;bottom:calc(max(8px,env(safe-area-inset-bottom,0px) - 26px) - var(--vgap,0px));padding:4px;border:0;border-radius:999px;
+  background:var(--gl-bg);-webkit-backdrop-filter:blur(var(--gl-blur,8px)) saturate(190%) brightness(1.04);backdrop-filter:blur(var(--gl-blur,8px)) saturate(190%) brightness(1.04);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 1.5px 1.5px 1px -1px var(--gl-edge),inset -1.5px -1.5px 1px -1px var(--gl-edge),inset 0 0 10px rgba(255,255,255,.07),var(--gl-drop)}
+/* Glas-Pille: Position über --pill (0/1/2); beim Seitenwischen setzt place() den Wert direkt, damit sie mit dem Finger mitläuft */
+@property --pill{syntax:"<number>";inherits:true;initial-value:0}
+@property --sq{syntax:"<number>";inherits:true;initial-value:0}
+#tabs{--pill:0;transition:--pill .45s cubic-bezier(.34,1.35,.55,1)}
+#tabs:has(button.on:nth-child(2)){--pill:1}
+#tabs:has(button.on:nth-child(3)){--pill:2}
+/* Wasserblase: klarer Kern, Glanzpunkt oben, Lichtsaum unten */
+#tabs::before{content:"";position:absolute;top:0;bottom:0; /* Blase oben, unten und in den Endstellungen seitlich bündig mit der Leiste */left:0;width:calc(100% / 3);border-radius:999px;
+  background:radial-gradient(ellipse 55% 38% at calc((32 + clamp(0, var(--pill), 2) * 18) * 1%) 16%,rgba(255,255,255,var(--gl-spec)),transparent 72%),radial-gradient(ellipse 85% 55% at 50% 118%,rgba(255,255,255,var(--gl-caus)),transparent 70%),var(--gl-pill);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 0 1.5px 1px -.5px var(--gl-edge),inset 0 -2px 3px -1px rgba(255,255,255,var(--gl-caus)),inset 0 -8px 12px -8px rgba(0,0,0,var(--gl-deep)),0 4px 12px rgba(0,0,0,.10);
+  -webkit-backdrop-filter:saturate(1.8) brightness(1.08);backdrop-filter:saturate(1.8) brightness(1.08);
+  /* Nachfedern über ein Ende hinaus: statt hinauszuragen wird die Blase an der Wand zusammengedrückt (Verschiebung hält sie bündig an der Wand) */
+  --ov:max(0, var(--pill) - 2, 0 - var(--pill));
+  transform:translateX(calc(clamp(0, var(--pill), 2) * 100% + (max(0, var(--pill) - 2) - max(0, 0 - var(--pill))) * 40%)) scaleX(calc(1 - (var(--sq) + var(--ov)) * .8));transform-origin:var(--so,center);}
+#tabs:not(:has(button.on))::before{opacity:0}
+#tabs button{z-index:1;padding:10px 0 9px;border-radius:999px;font-size:12.5px}
+#tabs svg{width:26px;height:26px}
+html.ios-standalone #tabs{padding-bottom:4px}
+@media (min-width:700px){#tabs{left:50%;right:auto;width:400px;bottom:calc(16px + env(safe-area-inset-bottom,0px) - var(--vgap,0px));border:0;padding:4px}}
+@media (prefers-reduced-motion:reduce){#tabs{transition:none}}
+/* ---------- Liquid Glass (Test): Untermenüs der Einstellungen, Stil wie die Tab-Leiste ---------- */
+body{--gl-card:rgba(255,255,255,.42);--gl-sheet:color-mix(in srgb,var(--surface) 55%,transparent)}
+@media (prefers-color-scheme:dark){body:not(.m-light){--gl-card:rgba(255,255,255,.06);--gl-sheet:color-mix(in srgb,var(--surface) 58%,transparent)}}
+body.m-dark{--gl-card:rgba(255,255,255,.06);--gl-sheet:color-mix(in srgb,var(--surface) 58%,transparent)}
+#sheet.glass{background:rgba(10,12,18,.16)}
+#sheet.glass .sheet{margin:0 10px max(8px,env(safe-area-inset-bottom,0px) - 26px); /* Unterkante bündig mit der Tab-Leiste (gleicher Abstand nach unten und zur Seite) */
+  width:calc(100% - 20px);border-radius:34px;padding-bottom:20px;
+  background:var(--gl-sheet);-webkit-backdrop-filter:blur(var(--gl-blur-s,22px)) saturate(190%) brightness(1.04);backdrop-filter:blur(var(--gl-blur-s,22px)) saturate(190%) brightness(1.04);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 1.5px 1.5px 1px -1px var(--gl-edge),inset -1.5px -1.5px 1px -1px var(--gl-edge),inset 0 0 10px rgba(255,255,255,.07),var(--gl-drop)}
+/* Untermenü immer ganz sichtbar: nie unter die Statusleiste, zu lange Inhalte scrollen im Menü */
+#sheet.glass{padding-top:calc(env(safe-area-inset-top,0px) + var(--tc) + 10px)}
+#sheet.glass .sheet{max-height:calc(100% - max(8px,env(safe-area-inset-bottom,0px) - 26px));overscroll-behavior:contain}
+@media (min-width:700px){#sheet.glass .sheet{margin:0;width:100%;max-height:calc(100% - 20px)}}
+#sheet.glass .grab{background:var(--gl-rim)}
+/* Öffnen/Schließen ohne Durchsichtigkeits-Überblendung: sonst ist der Weichzeichner kurz schwächer. Nur Bewegung + Abdunkeln */
+@keyframes glDim{from{background:rgba(10,12,18,0)}}
+@keyframes glUndim{to{background:rgba(10,12,18,0)}}
+@keyframes glIn{from{transform:translateY(110%)}to{transform:none}}
+@keyframes glOut{to{transform:translateY(110%)}}
+#sheet.glass:not([hidden]){animation:glDim .25s ease}
+#sheet.glass:not([hidden]) .sheet{animation:glIn .45s cubic-bezier(.16,1,.3,1)}
+#sheet.glass.closing{animation:glUndim .24s ease forwards}
+#sheet.glass.closing .sheet{animation:glOut .24s ease-in forwards}
+@media (prefers-reduced-motion:reduce){#sheet.glass:not([hidden]),#sheet.glass:not([hidden]) .sheet{animation:none}}
+/* Diagramm-Vergrößerung (Statistik) im gleichen Glas-Stil; ohne Durchsichtigkeits-Überblendung, damit der Weichzeichner gleich stark bleibt */
+/* Drei-Punkte-Menüs (#menu) im gleichen Glas-Stil; Aufgehen nur mit Bewegung (ohne Überblendung, damit der Weichzeichner gleich stark bleibt) */
+#menu{border:0;border-radius:24px;padding:6px;background:var(--gl-sheet);-webkit-backdrop-filter:blur(var(--gl-blur-s,22px)) saturate(190%) brightness(1.04);backdrop-filter:blur(var(--gl-blur-s,22px)) saturate(190%) brightness(1.04);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 1.5px 1.5px 1px -1px var(--gl-edge),inset -1.5px -1.5px 1px -1px var(--gl-edge),inset 0 0 10px rgba(255,255,255,.07),var(--gl-drop)}
+#menu button{border-radius:18px}
+#menu button:hover{background:var(--gl-card)}
+#menu hr{border-top-color:var(--gl-rim)}
+@keyframes glMenuIn{from{transform:translateY(-10px) scale(.4)}to{transform:none}}
+#menu:not([hidden]){animation:glMenuIn .38s cubic-bezier(.34,1.3,.55,1)}
+@media (prefers-reduced-motion:reduce){#menu:not([hidden]){animation:none}}
+/* Transparenz-Stufen (Einstellungen › Transparenz): 0 = sehr durchsichtig, 1 = leicht (Standard), 2 = deckend */
+body[data-glass="0"]{--gl-bg:color-mix(in srgb,var(--surface) 12%,transparent);--gl-sheet:color-mix(in srgb,var(--surface) 10%,transparent);--gl-blur:3px;--gl-blur-s:10px}
+body[data-glass="2"]{--gl-bg:var(--surface);--gl-sheet:var(--surface);--gl-card:var(--surface-2);--gl-spec:0;--gl-caus:0}
+body[data-glass="2"] :is(#tabs,#sheet.glass .sheet,.glp-bar,#menu){-webkit-backdrop-filter:none;backdrop-filter:none}
+/* Vorschaufenster */
+.glp{position:relative;height:150px;border-radius:22px;overflow:hidden;margin:4px 0 18px;box-shadow:inset 0 0 0 .5px var(--gl-rim)}
+.glp-bg{position:absolute;inset:0 -60% 0 0;display:flex;gap:10px;padding:14px;animation:glpMove 9s ease-in-out infinite alternate}
+.glp-bg i{flex:none;width:92px;border-radius:16px;background:var(--c)}
+.glp-bg i::after{content:"";display:block;margin:78px 12px 0;height:8px;border-radius:4px;background:rgba(255,255,255,.75);box-shadow:0 14px 0 rgba(255,255,255,.5)}
+@keyframes glpMove{to{transform:translateX(-36%)}}
+@media (prefers-reduced-motion:reduce){.glp-bg{animation:none}}
+.glp-bar{position:absolute;left:12px;right:12px;bottom:12px;height:50px;border-radius:999px;display:flex;align-items:center;justify-content:space-around;padding:4px;color:var(--muted);
+  background:var(--gl-bg);-webkit-backdrop-filter:blur(var(--gl-blur,8px)) saturate(190%) brightness(1.04);backdrop-filter:blur(var(--gl-blur,8px)) saturate(190%) brightness(1.04);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 1.5px 1.5px 1px -1px var(--gl-edge),inset -1.5px -1.5px 1px -1px var(--gl-edge),inset 0 0 10px rgba(255,255,255,.07),var(--gl-drop)}
+.glp-bar span{flex:1;height:100%;display:grid;place-items:center;border-radius:999px}
+.glp-bar svg{width:22px;height:22px}
+.glp-bar span.on{color:var(--accent-text);background:radial-gradient(ellipse 55% 38% at 32% 16%,rgba(255,255,255,var(--gl-spec)),transparent 72%),radial-gradient(ellipse 85% 55% at 50% 118%,rgba(255,255,255,var(--gl-caus)),transparent 70%),var(--gl-pill);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 0 1.5px 1px -.5px var(--gl-edge),inset 0 -2px 3px -1px rgba(255,255,255,var(--gl-caus)),inset 0 -8px 12px -8px rgba(0,0,0,var(--gl-deep)),0 4px 12px rgba(0,0,0,.10)}
+/* Regler mit drei Stufen */
+.glr{-webkit-appearance:none;appearance:none;width:100%;height:34px;background:transparent;margin:0;display:block}
+.glr::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:var(--gl-card);box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 0 1px 2px rgba(0,0,0,.12)}
+.glr::-moz-range-track{height:8px;border-radius:99px;background:var(--gl-card);box-shadow:inset 0 0 0 .5px var(--gl-rim)}
+.glr::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;margin-top:-11px;border-radius:50%;border:0;background:radial-gradient(ellipse 55% 40% at 34% 22%,rgba(255,255,255,.95),transparent 72%),color-mix(in srgb,var(--surface) 80%,#fff);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 0 -3px 5px -2px rgba(0,0,0,.18),0 3px 10px rgba(0,0,0,.2)}
+.glr::-moz-range-thumb{width:30px;height:30px;border-radius:50%;border:0;background:color-mix(in srgb,var(--surface) 80%,#fff);box-shadow:0 3px 10px rgba(0,0,0,.2)}
+.glr-l{display:flex;justify-content:space-between;margin-top:6px;font-size:14px;font-weight:600;color:var(--muted)}
+.glr-l span{flex:1}.glr-l span:nth-child(2){text-align:center}.glr-l span:last-child{text-align:right}
+.glr-l span.on{color:var(--ink);font-weight:800}
+/* Innere Flächen: kleine Glasblasen wie die Tab-Blase */
+#sheet.glass :is(.set-list,.gs-opt,.seg,.in,.set-group,.stat,.panel){background:var(--gl-card);border-color:transparent;
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 0 1.5px 1px -.5px var(--gl-edge),0 2px 8px rgba(0,0,0,.05)}
+#sheet.glass :is(.set-list,.panel){border-radius:22px}
+#sheet.glass .stat{border-radius:18px}
+#sheet.glass .set-item{border-top-color:var(--gl-rim)}
+#sheet.glass .gs-opt{border-radius:18px}
+#sheet.glass .gs-opt.on{border-color:var(--ink)}
+#sheet.glass .seg{border-radius:18px}
+#sheet.glass .seg button{border-radius:14px}
+#sheet.glass .seg button.on{background:radial-gradient(ellipse 55% 38% at 32% 16%,rgba(255,255,255,var(--gl-spec)),transparent 72%),radial-gradient(ellipse 85% 55% at 50% 118%,rgba(255,255,255,var(--gl-caus)),transparent 70%),var(--gl-pill);
+  box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 0 1.5px 1px -.5px var(--gl-edge),inset 0 -2px 3px -1px rgba(255,255,255,var(--gl-caus)),inset 0 -8px 12px -8px rgba(0,0,0,var(--gl-deep)),0 4px 12px rgba(0,0,0,.10)}
+.fx-opt{align-items:flex-start}
+.fx-t{flex:1;display:flex;flex-direction:column;gap:2px}
+.fx-t b{font-size:16.5px}
+.fx-t span{font-size:14.5px;color:var(--muted)}
+.gs-list{display:flex;flex-direction:column;gap:8px}
+.gs-opt{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border-radius:14px;background:var(--surface-2);border:2px solid transparent;text-align:left}
+.gs-opt.on{border-color:var(--ink)}
+.gs-row{flex:1;display:flex;gap:6px;flex-wrap:wrap}
+.gs-pill{flex:1;min-width:0;text-align:center;font-size:13px;font-weight:800;color:color-mix(in oklab,var(--g) var(--g-tx),var(--ink));border:2px solid var(--g);border-radius:10px;padding:6px 1px;background:color-mix(in oklab,var(--g) var(--g-bg),var(--surface));overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-row{gap:5px}
+.gs-ck{width:18px;font-weight:900;color:var(--ink)}
+.switch{width:50px;height:30px;border-radius:99px;background:color-mix(in oklab,var(--ink) 18%,transparent);position:relative;flex:none;transition:background .2s ease}
+.switch i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .25s cubic-bezier(.34,1.45,.55,1)}
+.switch.on{background:var(--accent)}
+.switch.on i{background:var(--accent-ink)}
+.switch.on i{transform:translateX(20px)}
+.set-list{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;max-width:720px}
+/* Einstellungen auf iPad/Mac mittig */
+#main .set-list,.peek .set-list,.set-top{margin-left:auto;margin-right:auto;max-width:720px}
+.set-item{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;text-align:left;border-top:1px solid var(--line);min-height:58px}
+.set-item:first-child{border-top:0}
+button.set-item:hover{background:color-mix(in oklab,var(--ink) 4%,transparent)}
+.si-t{font-weight:600;flex:1}
+.si-v{color:var(--muted);font-size:15.5px}
+.si-ch{color:var(--muted);font-size:24px;line-height:1;margin-left:2px}
+.si-dot{width:10px;height:10px;border-radius:50%;background:var(--good);margin:0 11px}
+.si-dot.local{background:var(--hard)}
+.theme-ic.sm{width:32px;height:32px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.25)}
+.theme-ic.sm svg{width:16px;height:16px}
+
+/* Startbildschirm bei späteren Starts (Einstellung „Startanimation“): Nachthimmel, die Kugel fällt in die Tab-Leiste – wie in Cardo */
+html:has(> body.splashing:not(.intro-day):not(.splash-quick)){animation:htmlNight .9s cubic-bezier(.45,0,.55,1) .95s both}
+@keyframes htmlNight{from{background-color:#fff}to{background-color:#07090F}}
+body:not(.intro-day):not(.splash-quick) #splash{animation:splashNightEdge .9s cubic-bezier(.45,0,.55,1) .95s forwards}
+@keyframes splashNightEdge{to{box-shadow:0 260px 0 #07090F}}
+/* Nacht-Ebene und Sterne nur über opacity animiert (läuft ruckelfrei auf der Grafikkarte) */
+#splash::before{content:"";position:absolute;inset:0;background:#07090F;opacity:0;will-change:opacity;animation:spNight .9s cubic-bezier(.45,0,.55,1) .95s forwards}
+#splash::after{content:"";position:absolute;inset:0;opacity:0;pointer-events:none;will-change:opacity;animation:spStars .8s ease 1.45s forwards;
+  background-image:radial-gradient(1.4px 1.4px at 12% 18%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 33% 9%,#fff 50%,transparent 51%),radial-gradient(1.6px 1.6px at 71% 14%,#FFE9C2 50%,transparent 51%),radial-gradient(1px 1px at 86% 31%,#fff 50%,transparent 51%),radial-gradient(1.2px 1.2px at 22% 42%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 58% 27%,#fff 50%,transparent 51%),radial-gradient(1.3px 1.3px at 90% 58%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 8% 66%,#fff 50%,transparent 51%),radial-gradient(1.5px 1.5px at 44% 72%,#FFE9C2 50%,transparent 51%),radial-gradient(1px 1px at 76% 84%,#fff 50%,transparent 51%),radial-gradient(1.1px 1.1px at 17% 90%,#fff 50%,transparent 51%),radial-gradient(1px 1px at 63% 49%,#fff 50%,transparent 51%)}
+#splash.reveal-sky::before{animation:spNightOut .45s ease forwards}
+#splash.reveal-sky::after{animation:spStarsOut .35s ease forwards}
+@keyframes spNightOut{from{opacity:1}to{opacity:0}}
+@keyframes spStarsOut{from{opacity:.85}to{opacity:0}}
+.sp-pill{position:absolute;z-index:2;will-change:transform,opacity;overflow:hidden}
+.sp-pill i{position:absolute;inset:0;background:#FF5A36;will-change:opacity}
+.sp-ball.landed::after{display:none}
+.sp-ball.morph{z-index:3;animation:none;opacity:1;transform-origin:0 0}
+body.intro-day #splash::before,body.intro-day #splash::after{display:none} /* erstes Öffnen: kein Nachthimmel, das Intro ist weiß wie das App-Icon */
+body.splash-quick #splash::before,body.splash-quick #splash::after,body.splash-quick .sp-ball{display:none}
+body.splash-quick .sp-stage,body.splash-quick .sp-l{animation:none}
+body.splash-quick #splash{transition:opacity .28s ease,visibility .28s}
+@keyframes spNight{to{opacity:1}}
+@keyframes spStars{to{opacity:.85}}
+body.splashing #tabs{opacity:0}
+
+/* Scribo: Platz für die Tab-Leiste, Schmierblatt (eingebetteter Editor über der Leiste), Vorschau beim Wischen */
+#main{padding-bottom:110px}
+@media (min-width:900px){#main{padding-bottom:120px}}
+body.editing:not(.pad-on) #tabs,body.authing #tabs{display:none}
+#ed.embed{z-index:15}
+#ed.embed [data-ed="back"]{display:none}
+#ed.embed #scroller{padding-bottom:var(--tabsh,90px)}
+#ed.embed #toolsB{bottom:calc(var(--tabsh,90px) + 10px)}
+#ed.embed #pgind{bottom:calc(var(--tabsh,90px) + 12px)}
+@media (max-width:1060px){#ed.embed #pgind{bottom:calc(var(--tabsh,90px) + 74px)}}
+.pad-ph{padding:76px 16px 0}
+.pad-paper{margin:0 auto;max-width:760px;aspect-ratio:1/1.414;background:#fff;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.14),0 10px 30px -12px rgba(0,0,0,.3);overflow:hidden}
+.pad-paper img{width:100%;display:block}
+.set-item.static{cursor:default}
 </style>
 </head>
 <body>
 <div id="splash" aria-hidden="true"><div class="sp-stage"><div class="sp-l sp-arc"><svg viewBox="0 0 512 512"><defs><mask id="sma" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect width="512" height="512" fill="#fff"/><circle cx="256" cy="256" r="41" fill="#000"/></mask><filter id="ssa" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter></defs><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#ssa)"><g mask="url(#sma)" fill="none" stroke="#1E1F24" stroke-width="50" stroke-linecap="round"><path d="M332.17 165.22A118.5 118.5 0 0 0 179.83 165.22C137.70 200.58 186.00 256.00 256 256"/><path d="M179.83 346.78A118.5 118.5 0 0 0 332.17 346.78C374.30 311.42 326.00 256.00 256 256"/></g></g></g></svg></div><div class="sp-l sp-dot"><svg viewBox="0 0 512 512"><defs><filter id="ssb" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter><radialGradient id="sdb" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FF7A55"/><stop offset="1" stop-color="#F2491F"/></radialGradient></defs><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#ssb)"><circle cx="256" cy="256" r="29" fill="url(#sdb)"/></g></g></svg></div></div><div class="sp-ball"></div></div>
-<script>/* Startanimation nur beim ersten Öffnen nach der Installation (noch nie gesehen, nicht angemeldet); ?intro zeigt sie zum Testen immer */
-(function(){var el=document.getElementById("splash"),q=location.search,on=false;try{on=/[?&]intro\b/.test(q)||(!/[?&]local\b/.test(q)&&!localStorage.getItem("scribo-intro-seen")&&!localStorage.getItem("sb-rormgkvthvisrctcsjrg-auth-token")&&!matchMedia("(prefers-reduced-motion: reduce)").matches)}catch(e){}if(on)document.body.classList.add("splashing");else el.remove()})();</script>
+<script>/* Startbildschirm: erstes Öffnen nach der Installation (noch nie gesehen, nicht angemeldet) → Intro; sonst je nach Einstellung „Startanimation“ (einmal am Tag / immer / nie) wie bei Cardo; ?intro zeigt das Intro zum Testen immer */
+(function(){var b=document.body,q=location.search;try{var rm=matchMedia("(prefers-reduced-motion: reduce)").matches;if(/[?&]intro\b/.test(q)||(!/[?&]local\b/.test(q)&&!localStorage.getItem("scribo-intro-seen")&&!localStorage.getItem("sb-rormgkvthvisrctcsjrg-auth-token")&&!rm))b.classList.add("intro-day");else{var cs=JSON.parse(localStorage.getItem("notizen-settings")||"{}")||{},cm=cs.splash||"daily",d=new Date(),k=d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();if(rm||cm==="never"||(cm==="daily"&&localStorage.getItem("scribo-splash-day")===k))b.classList.add("splash-quick");else localStorage.setItem("scribo-splash-day",k)}}catch(e){}b.classList.add("splashing")})();</script>
 <div id="main"><div class="loading">Einen Moment …</div></div>
+<nav id="tabs" aria-label="Hauptnavigation"></nav>
+<div id="peek" class="peek" hidden aria-hidden="true"><div class="pgx"></div></div>
+<div id="peek2" class="peek" hidden aria-hidden="true"><div class="pgx"></div></div>
 <div id="ed" hidden></div>
 <div id="sheet" hidden></div>
 <div id="menu" hidden></div>
@@ -501,6 +699,7 @@ let sheetClose = null;
 function openSheet(html, bind, onClose){
   const s = $("#sheet"); s.classList.remove("closing");
   s.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`; s.hidden = false;
+  s.classList.toggle("glass", !ED.on || !!ED.embed); /* Liquid Glass wie in Cardo (nicht über einer geöffneten Notiz) */
   sheetClose = onClose || null;
   if (bind) bind($(".sheet", s));
 }
@@ -567,11 +766,11 @@ THEME_IC.cardo = '<svg viewBox="0 0 512 512"><path d="M320 165A116 116 0 1 0 320
 NEUTRAL_IC.cardo = ["#FFFFFF", "#1B1D23"];
 const S = { view: "home", fid: null, filter: "all", folders: {}, notes: {}, thumbs: {}, sync: "local", cardoLook: "auto" };
 const SET_KEY = "notizen-settings";
-S.set = { look: "cardo", finger: "auto" };
+S.set = { look: "cardo", finger: "auto", glass: 1, splash: "daily", scratch: null };
 try { const v = JSON.parse(localStorage.getItem(SET_KEY) || "null"); if (v) S.set = { ...S.set, ...v }; } catch {}
 try { S.cardoLook = localStorage.getItem("notizen-cardo-look") || "auto"; } catch {}
-try { const u = JSON.parse(localStorage.getItem("notizen-ui") || "null"); if (u) { S.view = ["home","folder","settings"].includes(u.view) ? u.view : "home"; S.fid = u.fid || null; S.filter = u.filter || "all"; } } catch {}
-const saveUi = () => { try { localStorage.setItem("notizen-ui", JSON.stringify({ view: S.view === "note" ? "folder" : S.view, fid: S.fid, filter: S.filter })); } catch {} };
+try { const u = JSON.parse(localStorage.getItem("notizen-ui") || "null"); if (u) { S.view = ["home","folder","settings","pad"].includes(u.view) ? u.view : "home"; S.fid = u.fid || null; S.filter = u.filter || "all"; S.libFid = u.lib || null; } } catch {}
+const saveUi = () => { try { localStorage.setItem("notizen-ui", JSON.stringify({ view: S.view === "note" ? (S.fid ? "folder" : "home") : S.view, fid: S.fid, filter: S.filter, lib: S.libFid || null })); } catch {} };
 const effLook = () => S.set.look === "cardo" ? (S.cardoLook || "auto") : S.set.look;
 const darkMQ = matchMedia("(prefers-color-scheme: dark)");
 const themeOf = () => THEMES.find(x => x.k === effLook()) || null;
@@ -579,6 +778,7 @@ function isDark(){ const t = themeOf(); if (t) return t.base === "dark"; const l
 function applyTheme(){
   const b = document.body, t = themeOf(), dark = isDark(), l = effLook(), forced = !!t || l !== "auto";
   b.classList.toggle("tinted", !!t); b.classList.toggle("neutral", !t);
+  b.dataset.glass = String(S.set.glass ?? 1); /* Transparenz: 0 stark · 1 leicht · 2 aus */
   b.classList.toggle("m-light", forced && !dark); b.classList.toggle("m-dark", forced && dark);
   b.style.setProperty("--accent", t ? t.c : dark ? BASE.d : BASE.l);
   b.style.setProperty("--accent-ink", t ? t.ink : dark ? BASE.id : BASE.il);
@@ -592,11 +792,15 @@ function applyTheme(){
 function hexColor(c){ try { const cv = hexColor.cv || (hexColor.cv = document.createElement("canvas")); cv.width = cv.height = 1; const x = cv.getContext("2d"); x.clearRect(0, 0, 1, 1); x.fillStyle = "#000"; x.fillStyle = c; x.fillRect(0, 0, 1, 1); const d = x.getImageData(0, 0, 1, 1).data; return "#" + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, "0")).join(""); } catch { return ""; } }
 darkMQ.addEventListener && darkMQ.addEventListener("change", applyTheme);
 applyTheme();
+function writeSettings(){ if (DB) DB.write("settings/main", { look: S.set.look, finger: S.set.finger, glass: S.set.glass ?? 1, splash: S.set.splash || "daily", scratch: S.set.scratch || null }); }
 function saveSettings(patch){
   S.set = { ...S.set, ...patch }; applyTheme();
   try { localStorage.setItem(SET_KEY, JSON.stringify(S.set)); } catch {}
-  if (DB) DB.write("settings/main", { look: S.set.look, finger: S.set.finger });
-  if (!ED.on) render();
+  writeSettings();
+  const lp = $("#lookPick"); if (lp) lp.innerHTML = lookPickerHTML();
+  const sp = $("#spPick"); if (sp) sp.innerHTML = splashPickerHTML();
+  const fp = $("#fgPick"); if (fp) fp.innerHTML = fingerPickerHTML();
+  if (!ED.on || ED.embed) render();
 }
 /* Farbthema aus Cardo übernehmen (gleiches Konto → Cardos Einstellung lesen) */
 let cardoLookT = 0;
@@ -770,7 +974,7 @@ function pull(){
   DB.meta.forEach((d, p) => { const i = p.indexOf("/"), c = p.slice(0, i), id = p.slice(i + 1); if (c === "folders") f[id] = d; else if (c === "notes") n[id] = d; else if (c === "thumbs") t[id] = d; });
   S.folders = f; S.notes = n; S.thumbs = t;
   const st = DB.meta.get("settings/main");
-  if (st && (st.look !== S.set.look || st.finger !== S.set.finger)) { S.set = { ...S.set, look: st.look || S.set.look, finger: st.finger || S.set.finger }; try { localStorage.setItem(SET_KEY, JSON.stringify(S.set)); } catch {} applyTheme(); }
+  if (st && ["look", "finger", "glass", "splash", "scratch"].some(k => st[k] !== undefined && st[k] !== S.set[k])) { ["look", "finger", "glass", "splash", "scratch"].forEach(k => { if (st[k] !== undefined && st[k] !== null) S.set[k] = st[k]; }); try { localStorage.setItem(SET_KEY, JSON.stringify(S.set)); } catch {} applyTheme(); }
   if (ED.on) ED.metaChanged(); else render();
 }
 
@@ -819,8 +1023,8 @@ function setupHint(){
   return `<div class="hint"><i></i><div><b>Sync ist noch nicht eingerichtet</b>Deine Notizen werden auf diesem Gerät gespeichert und später automatisch hochgeladen. In Supabase muss einmal die Datei <code>supabase-setup.sql</code> ausgeführt werden.</div></div>`;
 }
 function homeView(){
-  const fs = kids(null), recent = Object.entries(S.notes).sort((a, b) => (b[1].updated || 0) - (a[1].updated || 0)).slice(0, 8);
-  return `<div class="topbar"><h1>Notizen</h1><div class="tb-r">${syncPill()}<button class="icon-btn" data-act="go" data-v="settings" aria-label="Einstellungen">${IC.gear}</button></div></div>
+  const fs = kids(null), recent = Object.entries(S.notes).filter(([, n]) => n.folder).sort((a, b) => (b[1].updated || 0) - (a[1].updated || 0)).slice(0, 8);
+  return `<div class="topbar"><h1>Bibliothek</h1><div class="tb-r">${syncPill()}</div></div>
     ${setupHint()}
     ${recent.length ? `<div class="sec-h"><h2>Zuletzt bearbeitet</h2></div><div class="recent">${recent.map(([id, n]) => noteCard(id, n)).join("")}</div>` : ""}
     <div class="sec-h"><h2>Fächer</h2><span class="muted">${fs.length || ""}</span></div>
@@ -834,7 +1038,7 @@ function folderView(){
   const present = KINDS.filter(([k]) => counts[k]);
   if (S.filter !== "all" && !counts[S.filter]) S.filter = "all";
   const list = S.filter === "all" ? all : all.filter(([, n]) => (n.kind || "so") === S.filter);
-  return `<div class="crumbs"><button data-act="go" data-v="home">Notizen</button>${ch.map(id => `<span>›</span><button data-act="openFolder" data-id="${id}">${esc(S.folders[id].name)}</button>`).join("")}</div>
+  return `<div class="crumbs"><button data-act="go" data-v="home">Bibliothek</button>${ch.map(id => `<span>›</span><button data-act="openFolder" data-id="${id}">${esc(S.folders[id].name)}</button>`).join("")}</div>
     ${setupHint()}
     <div class="banner"><div class="art col" style="--c:${esc(f.color || COLORS[0])}"><span class="art-emoji">${esc(f.emoji || "")}</span></div>
       <div class="banner-body"><div><h1>${esc(f.name)}</h1><div class="banner-meta muted">${esc(folderMeta(S.fid))}</div></div>
@@ -853,25 +1057,280 @@ function lookPickerHTML(){
     <div class="lbl" style="margin:20px 0 12px">Farbthemen</div><div class="themes">${THEMES.filter(t => t.base === "light").map(t => card(t.k)).join("")}</div>
     <div class="lbl" style="margin:20px 0 12px">Dunkle Farbthemen</div><div class="themes">${THEMES.filter(t => t.base === "dark").map(t => card(t.k)).join("")}</div>`;
 }
-function settingsView(){
-  const fg = S.set.finger;
-  return `<div class="set-top"><div class="crumbs"><button data-act="go" data-v="home">‹ Notizen</button></div><div class="topbar"><h1>Einstellungen</h1></div></div>
-    <div class="set-group"><h2>Aussehen</h2><p>${S.set.look === "cardo" ? "Übernimmt automatisch das Farbthema, das du in Cardo gewählt hast." : "Die gleichen Farbthemen wie in Cardo."}</p>${lookPickerHTML()}</div>
-    <div class="set-group"><h2>Mit dem Finger zeichnen</h2><p>Mit dem Apple Pencil schreibst du immer. Ist Finger-Zeichnen aus, scrollt ein Finger und die Hand darf aufliegen.</p>
-      <div class="seg"><button class="${fg === "auto" ? "on" : ""}" data-act="setFinger" data-v="auto">Automatisch</button><button class="${fg === "on" ? "on" : ""}" data-act="setFinger" data-v="on">An</button><button class="${fg === "off" ? "on" : ""}" data-act="setFinger" data-v="off">Aus</button></div>
-      <p class="muted" style="font-size:14px;margin:10px 2px 0">Automatisch: Finger zeichnet, bis auf diesem Gerät ein Stift erkannt wurde${penSeen() ? " (Stift erkannt → Finger scrollt)" : ""}. Zwei Finger verschieben und zoomen immer.</p></div>
-    <div class="set-list">
-      <div class="set-item"><span class="si-t">Sync<small>${esc(syncLabel())}${DB && DB.pendingCount() ? " · " + DB.pendingCount() + " Änderungen warten" : ""}</small></span></div>
-      ${USER && SB ? `<div class="set-item"><span class="si-t">Konto<small>${esc(USER.email || "")} – dasselbe Konto wie in Cardo</small></span></div><button class="set-item" data-act="logout"><span class="si-t" style="color:var(--again)">Abmelden</span></button>` : `<div class="set-item"><span class="si-t">Nur auf diesem Gerät<small>Keine Anmeldung – nichts wird synchronisiert.</small></span></div>`}
-    </div>${setupHint()}`;
-}
 function render(){
-  if (ED.on || !DB) return;
+  if (!DB || (ED.on && !ED.embed)) return;
+  const tb = $("#tabs"); if (tb) tb.innerHTML = tabsHTML();
+  S.gen = (S.gen || 0) + 1;
+  if (S.view === "pad") { openPad(); measureTabs(); schedulePrerender(); return; }
+  if (ED.on && ED.embed) closeNote(true);
   const m = $("#main"), y = scrollY, same = render.last === S.view + S.fid;
-  m.innerHTML = S.view === "folder" ? folderView() : S.view === "settings" ? settingsView() : homeView();
+  m.innerHTML = S.view === "settings" ? settingsView() : libView();
   if (same) scrollTo(0, y); render.last = S.view + S.fid;
+  measureTabs(); schedulePrerender();
 }
-function go(view, fid){ S.view = view; if (fid !== undefined) S.fid = fid; saveUi(); render(); scrollTo(0, 0); }
+function go(view, fid){ if ((S.view === "home" || S.view === "folder") && tabOf(view) !== "lib") S.libFid = S.view === "folder" ? S.fid : null; S.view = view; if (fid !== undefined) S.fid = fid; saveUi(); render(); scrollTo(0, 0); }
+/* ---------- Drei Seiten wie bei Cardo: Schmierblatt · Bibliothek · Einstellungen (Tab-Leiste + Seitenwischen) ---------- */
+const ICONS = {
+  pad:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h7"/><path d="M15.5 4.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4z"/></svg>',
+  lib:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+};
+const PAGES = ["pad", "lib", "settings"];
+const tabOf = v => v === "pad" || v === "settings" ? v : "lib";
+const libTarget = () => (S.libFid && S.folders[S.libFid] ? S.libFid : null);
+function tabsHTML(){
+  const cur = tabOf(S.view), t = (v, label) => `<button class="${cur === v ? 'on' : ''}" data-act="nav" data-v="${v}" ${cur === v ? 'aria-current="page"' : ''}>${ICONS[v]}<span>${label}</span></button>`;
+  return t("pad", "Schmierblatt") + t("lib", "Bibliothek") + t("settings", "Einstellungen");
+}
+function goTab(v){ if (v === "lib") { const f = libTarget(); go(f ? "folder" : "home", f); } else go(v); }
+function libView(){ return S.view === "folder" ? folderView() : homeView(); }
+function pageHTML(tab){
+  if (tab === "settings") return settingsView();
+  if (tab === "pad") { const id = S.set.scratch, th = id && S.thumbs[id]; return `<div class="pad-ph"><div class="pad-paper">${th && th.u ? `<img src="${th.u}" alt="">` : ""}</div></div>`; }
+  const f = libTarget(), v0 = S.view, f0 = S.fid; S.view = f ? "folder" : "home"; S.fid = f || S.fid; const h = libView(); S.view = v0; S.fid = f0; return h;
+}
+/* Höhe der Tab-Leiste merken (das Schmierblatt lässt darüber Platz) */
+function measureTabs(){ const tb = $("#tabs"); if (!tb || getComputedStyle(tb).display === "none") return; const h = Math.max(0, Math.round(innerHeight - tb.getBoundingClientRect().top)); document.documentElement.style.setProperty("--tabsh", h + "px"); }
+addEventListener("resize", measureTabs);
+
+/* ---------- Schmierblatt: ein leeres Blatt zum sofortigen Losschreiben (eigene Notiz ohne Ordner) ---------- */
+function scratchId(){
+  let id = S.set.scratch; const n = id && (S.notes[id] || DB.meta.get("notes/" + id));
+  if (n && !n.folder) return id;
+  id = uid(); const note = { kind: "so", nr: null, date: today(), title: "Schmierblatt", folder: null, scratch: true, pages: [newPage("blank", "p")], files: {}, created: Date.now(), updated: Date.now() };
+  DB.write("notes/" + id, note); S.notes[id] = note;
+  S.set = { ...S.set, scratch: id }; try { localStorage.setItem(SET_KEY, JSON.stringify(S.set)); } catch {} writeSettings();
+  return id;
+}
+function openPad(){
+  if (ED.on && ED.embed && ED.nid === S.set.scratch && S.notes[ED.nid] && !S.notes[ED.nid].folder) return;
+  if (ED.on) closeNote(true);
+  openNote(scratchId(), { embed: true });
+}
+function padSheet(){
+  openSheet(`${headC("Schmierblatt")}<p class="muted" style="margin:0 0 16px;font-size:15.5px">Zum schnellen Losschreiben, ohne erst einen Ordner anzulegen. Was du behalten willst, übernimmst du in ein Fach.</p>
+    <div class="set-list">
+      <button class="set-item" data-pad="keep"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)">${ICONS.lib}</span><span class="si-t">In ein Fach übernehmen</span><span class="si-ch" aria-hidden="true">›</span></button>
+      <button class="set-item" data-pad="new"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)">${IC.plus}</span><span class="si-t">Neues leeres Blatt</span><span class="si-ch" aria-hidden="true">›</span></button>
+    </div>`, root => root.addEventListener("click", e => {
+      const b = e.target.closest("[data-pad]"); if (!b) return;
+      if (b.dataset.pad === "keep") {
+        if (!kids(null).length) { closeSheet(); toast("Lege zuerst in der Bibliothek ein Fach an."); return; }
+        const id = ED.nid; closeSheet(); setTimeout(() => noteSheet({ id, keep: true }), 240);
+      } else {
+        const old = ED.nid, n = S.notes[old], empty = !ED.pages.some(p => p.strokes && p.strokes.length);
+        closeSheet(); closeNote(true);
+        if (n && !n.folder) { if (empty) deleteNote(old, true); else { const f = kids(null)[0]; if (f) DB.write("notes/" + old, { ...n, folder: f[0], title: "Schmierblatt " + fmtDate(today()), updated: Date.now() }); } }
+        S.set = { ...S.set, scratch: null }; openPad(); if (!empty && kids(null).length) toast("Das alte Blatt liegt jetzt im ersten Fach.");
+      }
+    }));
+}
+
+/* ---------- Seitenwischen (wie in Cardo) ---------- */
+const EASE = "cubic-bezier(.2,.8,.25,1)";
+const inApp = () => !!DB && !document.body.classList.contains("authing") && !document.body.classList.contains("splashing") && !document.getElementById("intro");
+let gestPre = false;
+document.addEventListener("pointerdown", () => { gestPre = !inApp(); }, true);
+const canSwipe = () => inApp() && !gestPre && (!ED.on || ED.embed) && $("#sheet").hidden && $("#menu").hidden;
+const neighbour = dir => { const i = PAGES.indexOf(tabOf(S.view)), j = i + (dir === "left" ? 1 : -1); return i < 0 || j < 0 || j >= PAGES.length ? null : PAGES[j]; };
+const curPage = () => S.view === "pad" ? $("#ed") : $("#main");
+let sw = null, animating = false, peekDir = null, peekGen = -1, prT = 0, raf2 = 0, pendingX = null, finT = 0, finCb = null;
+function settleSwipe(){ if (!animating || !finCb) return; clearTimeout(finT); const f = finCb; finCb = null; f(); }
+const PK = () => ({ left: $("#peek"), right: $("#peek2") });
+function prerender(){
+  if (!canSwipe()) return;
+  const W = innerWidth, pk = PK();
+  ["left", "right"].forEach(dir => {
+    const el = pk[dir], to = neighbour(dir);
+    if (!to) { el.hidden = true; el.firstElementChild.innerHTML = ""; return; }
+    el.firstElementChild.innerHTML = pageHTML(to);
+    el.style.transition = "none"; el.style.transform = `translate3d(${dir === "left" ? W : -W}px,0,0)`; el.hidden = false;
+  });
+  peekGen = S.gen;
+}
+function schedulePrerender(){
+  clearTimeout(prT);
+  prT = setTimeout(() => { if (sw || animating) return; (window.requestIdleCallback || (f => f()))(() => { if (!sw && !animating) prerender(); }, { timeout: 600 }); }, 120);
+}
+function showPeek(dir){
+  if (peekGen !== S.gen) prerender();
+  const to = neighbour(dir), pk = PK();
+  pk.left.style.visibility = pk.right.style.visibility = "hidden";
+  if (!to) { peekDir = null; return false; }
+  pk[dir].style.visibility = "visible"; peekDir = dir; return true;
+}
+function tabStyle(v, a, dur, ease = EASE){
+  const b = document.querySelector(`#tabs [data-v="${v}"]`); if (!b) return;
+  const svg = b.querySelector("svg"), t = dur ? `transform ${dur}ms ${ease}, stroke-width ${dur}ms ${ease}` : "none";
+  svg.style.transition = t; b.style.transition = dur ? `color ${dur}ms ${ease}` : "none";
+  svg.style.transform = `scale(${(.84 + .16 * a).toFixed(3)})`;
+  svg.style.strokeWidth = (1.6 + 1.3 * a).toFixed(2);
+  const lb = b.querySelector("span"); if (lb) lb.style.fontWeight = a >= .5 ? "800" : "600";
+  b.style.color = `color-mix(in oklab, var(--accent-text) ${Math.round(a * 100)}%, var(--muted))`;
+}
+function pillTo(from, to, p, dur, ease, off = 0){
+  const tb = $("#tabs"), bs = [...tb.querySelectorAll("button")], i0 = bs.findIndex(b => b.dataset.v === from), i1 = bs.findIndex(b => b.dataset.v === to);
+  if (i0 < 0 || i1 < 0) return;
+  const v = i0 + (i1 - i0) * p + off, n = bs.length - 1, pos = Math.max(0, Math.min(n, v)), ov = v - pos, sp = `${dur}ms cubic-bezier(.34,1.35,.55,1)`;
+  tb.style.transition = dur ? `--pill ${sp}, --sq ${sp}` : "none"; tb.style.setProperty("--pill", pos.toFixed(4)); tb.style.setProperty("--sq", Math.abs(ov).toFixed(4));
+  if (ov) tb.style.setProperty("--so", ov < 0 ? "left" : "right");
+}
+function clearTabStyles(){ const tb = $("#tabs"); tb.style.transition = ""; ["--pill", "--sq", "--so"].forEach(k => tb.style.removeProperty(k)); document.querySelectorAll("#tabs button, #tabs svg, #tabs span").forEach(el => { el.style.transition = ""; el.style.transform = ""; el.style.strokeWidth = ""; el.style.color = ""; el.style.fontWeight = ""; }); }
+let curX = 0;
+function swPlace(x, dur, ease = EASE){
+  const m = curPage(), W = innerWidth, t = dur ? `transform ${dur}ms ${ease}` : "none"; curX = x;
+  m.style.transition = t; m.style.transform = x ? `translate3d(${x}px,0,0)` : "";
+  const cur = tabOf(S.view);
+  if (peekDir) {
+    const pk = PK()[peekDir]; pk.style.transition = t;
+    pk.style.transform = `translate3d(${x + (peekDir === "left" ? W : -W)}px,0,0)`;
+    const p = Math.min(1, Math.abs(x) / W); tabStyle(cur, 1 - p, dur, ease); tabStyle(neighbour(peekDir), p, dur, ease);
+    pillTo(cur, neighbour(peekDir), p, dur, ease);
+  } else pillTo(cur, cur, 0, dur, ease, -x / W * 1.1);
+}
+function hidePeek(){
+  const W = innerWidth, pk = PK();
+  ["left", "right"].forEach(dir => { const el = pk[dir]; el.style.transition = "none"; el.style.visibility = "hidden"; el.style.transform = `translate3d(${dir === "left" ? W : -W}px,0,0)`; });
+  peekDir = null;
+}
+function finish(commit, dir, v = 0){
+  const W = innerWidth, target = commit ? (dir === "left" ? -W : W) : 0, dist = Math.abs(target - curX);
+  const ease = "cubic-bezier(.22,1,.36,1)", slope = 1 / .22;
+  const toward = Math.sign(target - curX) === Math.sign(v) && Math.abs(v) > .05;
+  let dur = toward ? slope * dist / Math.abs(v) : (commit ? 480 : 400);
+  dur = Math.round(Math.max(commit ? 300 : 260, Math.min(commit ? 540 : 440, dur)));
+  animating = true; cancelAnimationFrame(raf2); swPlace(target, dur, ease);
+  finCb = () => {
+    const el = curPage();
+    if (commit) { const to = neighbour(dir); el.style.transition = "none"; el.style.transform = ""; curX = 0; goTab(to); }
+    else swPlace(0, 0);
+    hidePeek(); clearTabStyles(); el.style.willChange = ""; document.body.classList.remove("swiping"); animating = false;
+    if (commit) { clearTimeout(prT); prerender(); }
+  };
+  finT = setTimeout(() => { const f = finCb; finCb = null; f && f(); }, dur + 16);
+}
+document.addEventListener("touchstart", e => {
+  sw = null; if (e.touches.length !== 1) return;
+  if (animating) settleSwipe();
+  if (animating || !canSwipe()) return;
+  if (e.target.closest("input,textarea,select,#scroller,.tools,#selmenu,#pgind,[data-noswipe]")) return; /* auf dem Blatt wird geschrieben, nicht gewischt */
+  const t = e.touches[0]; if (t.clientX < 18 || t.clientX > innerWidth - 18) return;
+  if (peekGen !== S.gen) prerender();
+  curPage().style.willChange = "transform";
+  sw = { x: t.clientX, y: t.clientY, drag: false, off: 0, pts: [[t.clientX, performance.now()]] };
+}, { passive: true });
+document.addEventListener("touchmove", e => {
+  if (!sw) return; const t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+  if (!sw.drag) {
+    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx) * .8) { sw = null; return; }
+    if (Math.abs(dx) < 6) return;
+    sw.drag = true; sw.off = Math.sign(dx) * 6; document.body.classList.add("swiping");
+  }
+  e.preventDefault();
+  const now = performance.now(); sw.pts.push([t.clientX, now]); while (sw.pts.length > 2 && now - sw.pts[0][1] > 90) sw.pts.shift();
+  const x = dx - sw.off, has = showPeek(x < 0 ? "left" : "right");
+  pendingX = has ? x : x / (1 + Math.abs(x) / 120) * .5;
+  if (!raf2) raf2 = requestAnimationFrame(() => { raf2 = 0; if (sw && pendingX !== null) swPlace(pendingX, 0); });
+}, { passive: false });
+function endSwipe(e){
+  if (!sw) return; const s0 = sw; sw = null; if (!s0.drag) { if (!animating) curPage().style.willChange = ""; return; }
+  cancelAnimationFrame(raf2); raf2 = 0;
+  const cx = e && e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : s0.pts[s0.pts.length - 1][0];
+  const x = cx - s0.x - s0.off; if (peekDir || x) swPlace(peekDir ? x : curX, 0);
+  const a = s0.pts[0], b = s0.pts[s0.pts.length - 1], v = (b[0] - a[0]) / Math.max(1, b[1] - a[1]);
+  const dir = x < 0 ? "left" : "right";
+  const flick = Math.abs(v) > .35 && Math.sign(v) === Math.sign(x);
+  const commit = !!neighbour(dir) && (Math.abs(x) > innerWidth * .4 || (flick && Math.abs(x) > 20));
+  finish(commit, dir, v);
+}
+document.addEventListener("touchend", endSwipe, { passive: true });
+document.addEventListener("touchcancel", () => { if (sw && sw.drag) { sw.pts = sw.pts.slice(-1); endSwipe(null); } sw = null; }, { passive: true });
+
+/* ---------- Einstellungen (Aufbau und Untermenüs wie in Cardo) ---------- */
+const headC = t => `<div class="sheet-h"><h2>${t}</h2></div>`;
+function lookInfo(k){
+  const t = THEMES.find(x => x.k === k); if (t) return { n: t.n, bg: t.icBg || t.c, fg: t.icFg || t.ink };
+  const n = NEUTRAL.find(x => x[0] === k) || NEUTRAL[0], c = NEUTRAL_IC[n[0]] || NEUTRAL_IC.auto; return { n: n[1], bg: c[0], fg: c[1] };
+}
+const SPLASH_OPTS = [["daily","Einmal am Tag","Beim ersten Öffnen des Tages die ganze Animation, danach ein kurzer Start."],["always","Immer","Bei jedem Öffnen die ganze Animation."],["never","Nie","Immer nur ein kurzer Übergang vom Icon in die App."]];
+const splashLabel = () => (SPLASH_OPTS.find(o => o[0] === (S.set.splash || "daily")) || SPLASH_OPTS[0])[1];
+function splashPickerHTML(){
+  const cur = S.set.splash || "daily";
+  return `<div class="gs-list" role="radiogroup" aria-label="Startanimation">${SPLASH_OPTS.map(([k, l, d]) => `<button class="gs-opt fx-opt ${cur === k ? 'on' : ''}" data-act="setSplash" data-v="${k}" role="radio" aria-checked="${cur === k}"><span class="fx-t"><b>${l}</b><span>${d}</span></span><span class="gs-ck" aria-hidden="true">${cur === k ? '✓' : ''}</span></button>`).join("")}</div>`;
+}
+function splashSheet(){ openSheet(`${headC("Startanimation")}<p class="muted" style="margin:0 0 16px;font-size:15.5px">Die Animation beim Öffnen von Scribo. Antippen überspringt sie jederzeit.</p><div id="spPick">${splashPickerHTML()}</div><button class="btn block" style="margin-top:14px;justify-content:center" data-act="playIntro">Intro ansehen</button>`); }
+const GLASS_L = ["Stark", "Leicht", "Aus"];
+function glassLabelsHTML(){ const g = S.set.glass ?? 1; return ["Stark", "Leicht", "Keine"].map((l, i) => `<span class="${i === g ? 'on' : ''}">${l}</span>`).join(""); }
+function glassSheet(){
+  const cols = ["#FF6B6B", "#FFB84D", "#4DD599", "#4DA6FF", "#A77BFF", "#FF7AC6", "#FFD84D", "#3FD0D4"];
+  openSheet(`${headC("Transparenz")}<p class="muted" style="margin:0 0 16px;font-size:15.5px">Wie stark die Tab-Leiste und die Menüs den Hintergrund durchscheinen lassen.</p>
+    <div class="glp" aria-hidden="true"><div class="glp-bg">${cols.map(c => `<i style="--c:${c}"></i>`).join("")}</div>
+      <div class="glp-bar"><span>${ICONS.pad}</span><span class="on">${ICONS.lib}</span><span>${ICONS.settings}</span></div></div>
+    <input class="glr" type="range" min="0" max="2" step="1" value="${S.set.glass ?? 1}" aria-label="Transparenz" aria-valuetext="${GLASS_L[S.set.glass ?? 1]}">
+    <div class="glr-l" id="glrL">${glassLabelsHTML()}</div>`, root => {
+    const r = root.querySelector(".glr");
+    r.addEventListener("input", () => { const v = +r.value; if (v === (S.set.glass ?? 1)) return; r.setAttribute("aria-valuetext", GLASS_L[v]); saveSettings({ glass: v }); const l = $("#glrL"); if (l) l.innerHTML = glassLabelsHTML(); });
+  });
+}
+function lookSheet(){
+  openSheet(`${headC("Thema")}<p class="muted" style="margin:0 0 16px;font-size:15.5px">${S.set.look === "cardo" ? "„Wie Cardo“ übernimmt automatisch das Thema, das du in Cardo gewählt hast." : "Hell, Dunkel und System sind schlicht schwarz-weiß. Ein Farbthema färbt die ganze App ein. System folgt deinem Gerät."}</p><div id="lookPick">${lookPickerHTML()}</div>`);
+}
+const FINGER_OPTS = [["auto","Automatisch","Der Finger zeichnet, bis auf diesem Gerät ein Stift erkannt wurde – danach scrollt er."],["on","An","Der Finger zeichnet immer."],["off","Aus","Der Finger scrollt immer, die Hand darf aufliegen."]];
+function fingerPickerHTML(){
+  const cur = S.set.finger || "auto";
+  return `<div class="gs-list" role="radiogroup" aria-label="Mit dem Finger zeichnen">${FINGER_OPTS.map(([k, l, d]) => `<button class="gs-opt fx-opt ${cur === k ? 'on' : ''}" data-act="setFinger" data-v="${k}" role="radio" aria-checked="${cur === k}"><span class="fx-t"><b>${l}</b><span>${d}</span></span><span class="gs-ck" aria-hidden="true">${cur === k ? '✓' : ''}</span></button>`).join("")}</div>`;
+}
+function fingerSheet(){ openSheet(`${headC("Mit dem Finger zeichnen")}<p class="muted" style="margin:0 0 16px;font-size:15.5px">Mit dem Apple Pencil schreibst du immer. Zwei Finger verschieben und zoomen immer.${penSeen() ? " Auf diesem Gerät wurde schon ein Stift erkannt." : ""}</p><div id="fgPick">${fingerPickerHTML()}</div>`); }
+function accountSheet(){
+  openSheet(`${headC("Konto")}${USER && SB ? `<p class="muted" style="margin:0 0 16px;font-size:15.5px">Dasselbe Konto wie in Cardo.</p>
+    <div class="set-list"><div class="set-item static"><span class="si-t">E-Mail</span><span class="si-v">${esc(USER.email || "")}</span></div></div>
+    <button class="btn block danger" style="justify-content:center" data-act="logout">Abmelden</button>`
+    : `<p class="muted" style="margin:0 0 16px;font-size:15.5px">Keine Anmeldung – deine Notizen bleiben nur auf diesem Gerät.</p>`}`);
+}
+function settingsView(){
+  const cur = lookInfo(S.set.look), pend = DB && DB.pendingCount ? DB.pendingCount() : 0;
+  const syncV = S.sync === "local" ? "Nur dieses Gerät" : !navigator.onLine || S.sync === "err" ? "Offline – wird nachgeholt" : S.sync === "setup" ? "Noch nicht eingerichtet" : pend || S.sync === "busy" ? "Wird gespeichert …" : "Aktuell";
+  const syncWarn = S.sync !== "ok";
+  return `<div class="topbar set-top"><h1>Einstellungen</h1></div>
+  <div class="set-list">
+    <button class="set-item" data-act="lookSheet"><span class="theme-ic sm" style="--tb:${cur.bg};--tf:${cur.fg}">${THEME_IC[S.set.look] || THEME_IC.auto}</span><span class="si-t">Thema</span><span class="si-v">${esc(cur.n)}</span><span class="si-ch" aria-hidden="true">›</span></button>
+    <button class="set-item" data-act="glassSheet"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="13" height="13" rx="3.5"/><rect x="8" y="8" width="13" height="13" rx="3.5" fill="currentColor" fill-opacity=".25"/></svg></span><span class="si-t">Transparenz</span><span class="si-v">${GLASS_L[S.set.glass ?? 1]}</span><span class="si-ch" aria-hidden="true">›</span></button>
+    <button class="set-item" data-act="splashSheet"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)">${THEME_IC.sparkle}</span><span class="si-t">Startanimation</span><span class="si-v">${splashLabel()}</span><span class="si-ch" aria-hidden="true">›</span></button>
+  </div>
+  <div class="set-list">
+    <button class="set-item" data-act="fingerSheet"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)">${IC.hand}</span><span class="si-t">Fingerzeichnen</span><span class="si-v">${(FINGER_OPTS.find(o => o[0] === (S.set.finger || "auto")) || FINGER_OPTS[0])[1]}</span><span class="si-ch" aria-hidden="true">›</span></button>
+  </div>
+  <div class="set-list">
+    <div class="set-item static"><span class="si-dot ${syncWarn ? 'local' : ''}"></span><span class="si-t">Synchronisierung</span><span class="si-v">${syncV}</span></div>
+  </div>
+  <div class="set-list">
+    <button class="set-item" data-act="accountSheet"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span class="si-t">Konto</span><span class="si-v">${esc(USER && USER.email || (SB ? "" : "Nur dieses Gerät"))}</span><span class="si-ch" aria-hidden="true">›</span></button>
+  </div>${setupHint()}`;
+}
+
+/* ---------- iOS-Lücke unten ausgleichen (installierte App, wie in Cardo) ---------- */
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+function fixBottomGap(){
+  document.documentElement.classList.toggle("ios-standalone", isIOS && (navigator.standalone === true || matchMedia("(display-mode: standalone)").matches));
+  let g = 0;
+  const standalone = navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+  const typing = /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || "") || !!(document.activeElement && document.activeElement.isContentEditable);
+  if (isIOS && standalone && !typing) {
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top,0px)";
+    document.body.appendChild(probe);
+    const boxH = probe.getBoundingClientRect().height, insetTop = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove();
+    if (insetTop < 1) { document.documentElement.style.setProperty("--vgap", "0px"); return; }
+    const portrait = matchMedia("(orientation: portrait)").matches;
+    const screenH = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    g = Math.round(screenH - boxH); if (g < 2 || g > 140) g = 0;
+  }
+  document.documentElement.style.setProperty("--vgap", g + "px");
+}
+fixBottomGap();
+addEventListener("resize", fixBottomGap); addEventListener("orientationchange", () => setTimeout(fixBottomGap, 300));
+addEventListener("pageshow", fixBottomGap); document.addEventListener("focusout", () => setTimeout(fixBottomGap, 250));
+setTimeout(fixBottomGap, 600);
 
 /* ---------- Ordner anlegen / bearbeiten ---------- */
 function folderSheet(id, parent){
@@ -917,7 +1376,7 @@ function noteSheet(opts = {}){
   let nrTouched = !!n0;
   const autoTitle = () => st.kind !== "so" ? kindName(st.kind) + " " + st.nr : "Notiz";
   const fileBox = () => !st.file ? "" : `<div class="file-box">${IC.file}<div><b>${esc(st.file.name)}</b><span>${st.reading ? "wird gelesen …" : st.info ? st.info.pages.length + (st.info.pages.length === 1 ? " Seite" : " Seiten") + " · " + (st.file.size / 1048576).toFixed(1) + " MB" : "Konnte nicht gelesen werden"}</span></div></div>`;
-  const body = () => `${head(n0 ? "Notiz bearbeiten" : st.file ? "Datei importieren" : "Neue Notiz")}
+  const body = () => `${head(opts.keep ? "In ein Fach übernehmen" : n0 ? "Notiz bearbeiten" : st.file ? "Datei importieren" : "Neue Notiz")}
     ${fileBox()}
     <div class="field"><label>Art</label><div class="opts">${KINDS.map(([k, l]) => `<button type="button" class="opt ${st.kind === k ? "on" : ""}" data-k="${k}"><i class="kd ${k}"></i>${l}</button>`).join("")}</div></div>
     <div class="row2">
@@ -944,7 +1403,7 @@ function noteSheet(opts = {}){
     $("#nGo", root).addEventListener("click", async e => {
       grab(root); const btn = e.currentTarget; btn.disabled = true;
       const base = { kind: st.kind, nr: st.kind === "so" ? null : st.nr, date: st.date, title: st.title.trim(), folder: st.folder };
-      if (n0) { DB.write("notes/" + id, { ...n0, ...base, updated: Date.now() }); closeSheet(); return; }
+      if (n0) { DB.write("notes/" + id, { ...n0, ...base, scratch: opts.keep ? false : n0.scratch, updated: Date.now() }); closeSheet(); if (opts.keep && base.folder) { closeNote(true); S.set = { ...S.set, scratch: null }; openPad(); toast("Im Fach gespeichert – hier ist ein neues leeres Blatt."); } return; }
       try {
         const nid = uid(); let pages, files = {};
         if (st.file) { const r = await storeImport(st.file, st.info, st.margin); pages = r.pages; files = r.files; }
@@ -1140,18 +1599,19 @@ function toolsInner(){
 }
 function renderTools(){ ["toolsT", "toolsB"].forEach(id => { const el = $("#" + id); if (el) { el.dataset.t = TS.tool; el.innerHTML = toolsInner(); } }); }
 function setTool(t){ if (ED.sel) clearSel(); TS.tool = t; saveTools(); renderTools(); }
-function edTitle(){ const n = ED.note, b = $(".ed-title b"), s = $(".ed-title small"); if (!b) return; b.textContent = noteTitle(n); const f = S.folders[n.folder]; s.textContent = kindName(n.kind) + (n.date ? " · " + fmtDate(n.date) : "") + (f ? " · " + f.name : ""); document.title = noteTitle(n) + " – Scribo"; }
+function edTitle(){ const n = ED.note, b = $(".ed-title b"), s = $(".ed-title small"); if (!b) return; if (ED.embed) { b.textContent = "Schmierblatt"; s.textContent = "Antippen: behalten oder neues Blatt"; document.title = "Scribo"; return; } b.textContent = noteTitle(n); const f = S.folders[n.folder]; s.textContent = kindName(n.kind) + (n.date ? " · " + fmtDate(n.date) : "") + (f ? " · " + f.name : ""); document.title = noteTitle(n) + " – Scribo"; }
 function updUndo(){ const u = $('[data-ed="undo"]'), r = $('[data-ed="redo"]'); if (u) u.disabled = !ED.undo.length; if (r) r.disabled = !ED.redo.length; }
 
-async function openNote(nid){
+async function openNote(nid, opts = {}){
   const n = S.notes[nid] || DB.meta.get("notes/" + nid); if (!n) return;
   closeMenu(); if (!$("#sheet").hidden) closeSheet();
   if (!n.pages || !n.pages.length) { n.pages = [newPage("lined", "p")]; DB.write("notes/" + nid, n); }
   let pos = null; try { pos = JSON.parse(localStorage.getItem("notizen-pos-" + nid) || "null"); } catch {}
-  Object.assign(ED, { on: true, nid, note: n, pages: [], undo: [], redo: [], sel: null, selbox: null, changed: false, cur: 0, from: S.view, zoom: pos && pos.z ? clamp(pos.z, ZMIN, ZMAX) : 1, touchT: Date.now() });
-  S.view = "note"; if (n.folder && S.folders[n.folder] && ED.from === "folder") S.fid = S.fid || n.folder;
-  document.body.classList.add("editing"); closeMenu();
-  const ed = $("#ed"); ed.hidden = false;
+  const embed = !!opts.embed;
+  Object.assign(ED, { on: true, embed, nid, note: n, pages: [], undo: [], redo: [], sel: null, selbox: null, changed: false, cur: 0, from: embed ? "pad" : S.view, zoom: pos && pos.z ? clamp(pos.z, ZMIN, ZMAX) : 1, touchT: Date.now() });
+  if (!embed) { if (S.view === "home" || S.view === "folder") S.libFid = S.view === "folder" ? S.fid : null; S.view = "note"; if (n.folder && S.folders[n.folder] && ED.from === "folder") S.fid = S.fid || n.folder; }
+  document.body.classList.add("editing"); document.body.classList.toggle("pad-on", embed); closeMenu();
+  const ed = $("#ed"); ed.hidden = false; ed.classList.toggle("embed", embed);
   ed.innerHTML = `<header class="ed-top">
       <button class="ib" data-ed="back" aria-label="Zurück">${IC.back}</button>
       <button class="ed-title" data-ed="info"><b></b><small></small></button>
@@ -1199,7 +1659,7 @@ function savePos(){
   if (!ED.on || !ED.pages.length) return; const sc = $("#scroller"), p = ED.pages[curIdx()];
   try { localStorage.setItem("notizen-pos-" + ED.nid, JSON.stringify({ z: ED.zoom, i: curIdx(), f: (sc.scrollTop + 10 - p.top) / p.cssH, x: sc.scrollLeft })); } catch {}
 }
-function closeNote(){
+function closeNote(keep){
   if (!ED.on) return;
   if (DR) cancelDR();
   ED.pages.forEach(p => { if (p.dirty) savePage(p); clearTimeout(p.saveT); });
@@ -1208,8 +1668,9 @@ function closeNote(){
   const nid = ED.nid, need = ED.changed || !S.thumbs[nid], strokes0 = ED.pages[0] ? ED.pages[0].strokes : [];
   ED.pages.forEach(release); if (ED.live) ED.live.width = ED.live.height = 0;
   ED.on = false; ED.pages = []; ED.sel = null; ED.selbox = null; ED.undo = []; ED.redo = [];
-  const ed = $("#ed"); ed.hidden = true; ed.innerHTML = ""; document.body.classList.remove("editing"); document.title = "Scribo";
-  S.view = ED.from === "home" || !S.fid || !S.folders[S.fid] ? "home" : "folder"; saveUi(); render();
+  const ed = $("#ed"); ed.hidden = true; ed.innerHTML = ""; ed.classList.remove("embed"); ed.style.transform = ""; ed.style.transition = ""; document.body.classList.remove("editing", "pad-on"); document.title = "Scribo";
+  const wasEmbed = ED.embed; ED.embed = false;
+  if (!keep) { if (wasEmbed) render(); else { S.view = ED.from === "home" || !S.fid || !S.folders[S.fid] ? "home" : "folder"; saveUi(); render(); } }
   (need ? makeThumbWith(nid, strokes0) : Promise.resolve()).finally(() => { if (!ED.on) clearSrc(); });
 }
 async function makeThumbWith(nid, strokes){
@@ -1662,7 +2123,7 @@ function bindEditor(){
     const b = e.target.closest("[data-ed]"); if (!b) return;
     const a = b.dataset.ed;
     if (a === "back") closeNote();
-    else if (a === "info") noteSheet({ id: ED.nid });
+    else if (a === "info") { if (ED.embed) padSheet(); else noteSheet({ id: ED.nid }); }
     else if (a === "undo") undo();
     else if (a === "redo") redo();
     else if (a === "addpg") addPage();
@@ -1779,6 +2240,10 @@ const ACT = {
   noteMenu: el => { const id = el.dataset.id; openMenu(el, [{ t: "Öffnen", ic: "note", fn: () => openNote(id) }, { t: "Bearbeiten / verschieben", ic: "edit", fn: () => noteSheet({ id }) }, "-", { t: "Löschen", ic: "trash", danger: true, fn: () => confirmDelNote(id) }]); },
   filter: el => { S.filter = el.dataset.v; saveUi(); render(); },
   setLook: el => saveSettings({ look: el.dataset.v }),
+  nav: el => { const v = el.dataset.v; if (tabOf(S.view) === v) { if (v === "lib" && S.view === "folder") go("home", null); return; } goTab(v); },
+  lookSheet, glassSheet, splashSheet, fingerSheet, accountSheet,
+  setSplash: el => saveSettings({ splash: el.dataset.v }),
+  playIntro: () => { if (document.getElementById("intro")) return; closeSheet(); setTimeout(() => playIntro(null), 260); },
   setFinger: el => saveSettings({ finger: el.dataset.v }),
   logout: async () => { try { await SB.auth.signOut(); } catch {} location.reload(); },
   authMode: el => showAuth(el.dataset.v)
@@ -1790,24 +2255,70 @@ async function start(){
   DB = makeStore(USER.id); await DB.init();
   DB.on(pull); DB.onInk(onRemoteInk);
   S.sync = SB ? (navigator.onLine ? "busy" : "err") : "local";
-  pull();
+  pull(); setTimeout(() => hideSplash(false), 0);
   if (SB) { DB.loadMeta().catch(e => { console.warn(e); setSync("err"); }); DB.flush(); DB.flushFiles(); fetchCardoLook(); }
 }
 /* ---------- Startanimation beim ersten Öffnen: Kugel fliegt hoch → fällt auf eine Notizseite, ein Stift kritzelt das S darauf → die Kugel fällt ins S, beim Aufprall entsteht das Icon → Logo gleitet in die Anmeldung (Aufbau und Farben wie bei Cardo) ---------- */
 const INTRO_KEY = "scribo-intro-seen", splashStart = performance.now();
 let splashGone = false;
+let splashT = 0;
 function hideSplash(auth){
   if (splashGone) return; splashGone = true;
-  const el = document.getElementById("splash"); if (!el) return;
-  const out = () => { el.classList.add("out"); document.body.classList.remove("splashing"); setTimeout(() => el.remove(), 400); };
-  if (!auth || !el.animate) { out(); return; }
-  /* Das Intro beginnt genau im Umkehrpunkt der hochfliegenden Kugel (Ende ihrer Animation) → kein Stillstand, kein Ruck */
-  const ball = el.querySelector(".sp-ball"); let go = false;
-  const start = () => { if (go) return; go = true; playIntro(ball); setTimeout(() => { el.remove(); document.body.classList.remove("splashing"); }, 450); };
-  const la = ball && ball.getAnimations && ball.getAnimations().find(a => a.animationName === "spLaunch");
-  if (la && la.finished) la.finished.then(start, start);
-  setTimeout(start, Math.max(0, 1900 - (performance.now() - splashStart)));
+  const el = document.getElementById("splash"); if (!el) { document.body.classList.remove("splashing"); return; }
+  const b = document.body, first = b.classList.contains("intro-day"), quick = b.classList.contains("splash-quick");
+  if (auth && first && el.animate) {
+    /* Das Intro beginnt genau im Umkehrpunkt der hochfliegenden Kugel (Ende ihrer Animation) → kein Stillstand, kein Ruck */
+    const ball = el.querySelector(".sp-ball"); let go = false;
+    const start = () => { if (go) return; go = true; playIntro(ball); setTimeout(() => { el.remove(); b.classList.remove("splashing"); }, 450); };
+    const la = ball && ball.getAnimations && ball.getAnimations().find(a => a.animationName === "spLaunch");
+    if (la && la.finished) la.finished.then(start, start);
+    splashT = setTimeout(start, Math.max(0, 1900 - (performance.now() - splashStart)));
+    return;
+  }
+  const wait = quick ? 0 : Math.max(0, 1850 - (performance.now() - splashStart)); /* Drehen + Hochfliegen + Dunkelwerden abwarten */
+  splashT = setTimeout(() => quick || first ? fadeSplash(el) : morphSplash(el), wait);
 }
+function fadeSplash(el){ el.classList.add("out"); document.body.classList.remove("splashing"); setTimeout(() => el.remove(), 320); }
+/* Spätere Starts (wie Cardo): die Kugel fällt aus dem Nachthimmel nach unten und wird zur Tab-Leiste */
+function morphSplash(el){
+  const ball = el.querySelector(".sp-ball"), tabs = $("#tabs");
+  const tabsShown = tabs && getComputedStyle(tabs).display !== "none" && tabs.children.length;
+  const finish = () => { el.classList.add("out"); document.body.classList.remove("splashing"); setTimeout(() => el.remove(), 400); };
+  if (!ball || !tabsShown || !ball.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
+  const a = ball.getBoundingClientRect(), b = tabs.getBoundingClientRect(), ts = getComputedStyle(tabs);
+  const radius = ts.borderTopLeftRadius || "0px", bg = ts.backgroundColor, d = Math.min(b.height, 64);
+  const cx = b.left + b.width / 2, cy = b.top + b.height / 2, k0 = a.width / d;
+  ball.classList.add("morph");
+  setTimeout(() => { if (el.isConnected) { document.body.classList.remove("splashing"); el.remove(); } }, 2500); /* Notbremse, falls die Animation nicht zu Ende läuft (z. B. App im Hintergrund) */
+  Object.assign(ball.style, { left: a.left + "px", top: a.top + "px", width: d + "px", height: d + "px", transform: `scale(${k0})` });
+  try { ball.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 480, fill: "forwards", pseudoElement: "::after" }); } catch { ball.classList.add("landed"); }
+  const fall = ball.animate([
+    { transform: `translate3d(0,0,0) scale(${k0})` },
+    { transform: `translate3d(${cx - d / 2 - a.left}px,${cy - d / 2 - a.top}px,0) scale(1)` }
+  ], { duration: 480, easing: "cubic-bezier(.55,0,.85,.35)", fill: "forwards" });
+  fall.onfinish = () => {
+    ball.classList.add("landed");
+    const pill = document.createElement("div"); pill.className = "sp-pill"; pill.innerHTML = "<i></i>";
+    Object.assign(pill.style, { left: b.left + "px", top: b.top + "px", width: b.width + "px", height: b.height + "px", borderRadius: radius, background: bg });
+    el.appendChild(pill);
+    const s0 = .7 * d;
+    const grow = pill.animate([
+      { transform: `scale(${s0 / b.width},${s0 / b.height})` },
+      { transform: "scale(1,1)" }
+    ], { duration: 400, easing: "cubic-bezier(.3,1.15,.5,1)", fill: "forwards" });
+    pill.firstChild.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 360, easing: "ease-out", fill: "forwards" });
+    ball.animate([{ opacity: 1, transform: `translate3d(${cx - d / 2 - a.left}px,${cy - d / 2 - a.top}px,0) scale(1)` }, { opacity: 0, transform: `translate3d(${cx - d / 2 - a.left}px,${cy - d / 2 - a.top}px,0) scale(1.15)` }], { duration: 170, easing: "ease-out", fill: "forwards" });
+    el.style.background = "transparent";
+    el.classList.add("reveal-sky");
+    grow.onfinish = () => {
+      document.body.classList.remove("splashing"); tabs.classList.add("tabs-in");
+      pill.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" });
+      setTimeout(() => el.remove(), 200); setTimeout(() => tabs.classList.remove("tabs-in"), 700);
+    };
+  };
+}
+/* Antippen überspringt die Startanimation (nicht beim ersten Start nach der Installation) */
+(() => { const el = document.getElementById("splash"); if (el) el.addEventListener("pointerdown", () => { if (!el.isConnected || el.classList.contains("out") || document.body.classList.contains("intro-day")) return; clearTimeout(splashT); splashGone = true; document.body.classList.add("splash-quick"); fadeSplash(el); }); })();
 setTimeout(() => hideSplash(false), 6000); /* Notbremse */
 function playIntro(from){
   const W = innerWidth, H = innerHeight, cx = W / 2, cy = H * .47;
@@ -1946,12 +2457,12 @@ function playIntro(from){
 }
 function cachedUser(){ try { const t = JSON.parse(localStorage.getItem("sb-rormgkvthvisrctcsjrg-auth-token") || "null"), u = t && (t.user || (t.currentSession && t.currentSession.user)); return u && u.id ? u : null; } catch { return null; } }
 async function boot(){
-  if (LOCAL_ONLY) { USER = { id: "local" }; hideSplash(false); return start(); }
+  if (LOCAL_ONLY) { USER = { id: "local" }; return start(); }
   if (!window.supabase) { $("#main").innerHTML = '<div class="loading">Beim ersten Start braucht Scribo eine Internetverbindung.</div>'; return; }
   SB = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   SB.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") setTimeout(newPasswordSheet, 300); if (ev === "SIGNED_OUT" && USER) location.reload(); });
   const cu = cachedUser();
-  if (cu) { USER = cu; hideSplash(false); start(); SB.auth.getSession().then(({ data }) => { if (data && data.session) USER = data.session.user; }).catch(() => {}); return; }
+  if (cu) { USER = cu; start(); SB.auth.getSession().then(({ data }) => { if (data && data.session) USER = data.session.user; }).catch(() => {}); return; }
   try { const { data } = await SB.auth.getSession(); if (!data.session) { showAuth(); hideSplash(true); return; } USER = data.session.user; start(); }
   catch { $("#main").innerHTML = '<div class="loading">Beim ersten Start braucht Scribo eine Internetverbindung.</div>'; }
 }

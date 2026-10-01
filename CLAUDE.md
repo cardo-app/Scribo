@@ -15,6 +15,7 @@ Scribo: eigenständige Notizen-Web-App (PWA), gehört zum Cardo-Ökosystem, für
 - Ordner `Claude outputs/` NICHT committen.
 
 ## Aufbau
+- Drei Seiten wie bei Cardo (Tab-Leiste + Seitenwischen, Code aus Cardo übernommen): links **Schmierblatt** (eigene Notiz ohne Ordner, `S.set.scratch`; der Editor läuft eingebettet über der Tab-Leiste, `ED.embed`), Mitte **Bibliothek** (`home`/`folder`), rechts **Einstellungen** (Aufbau, Untermenüs, Transparenz und Startanimation einmal am Tag/immer/nie exakt wie Cardo). Auf dem Blatt selbst wird nicht gewischt (nur Kopfzeile/Tab-Leiste).
 - Supabase: gleiches Projekt wie Cardo (rormgkvthvisrctcsjrg), gleiches Konto. Tabelle `notes_docs` (user_id, path, data): `folders/<id>`, `notes/<id>` (Seitenliste), `thumbs/<id>`, `settings/main`, `ink/<notiz>/<seite>` (Striche, Delta-kodiert). Dateien: `note-files/<user>/<datei>`.
 - Auf dem Gerät: IndexedDB `cardo-notizen` (meta, ink, pend = wartende Änderungen, files, fup = wartende Uploads). Offline-first.
 - Farbthema „Wie Cardo“ liest Cardos `docs`-Zeile `settings/main`.
