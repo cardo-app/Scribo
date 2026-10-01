@@ -1830,7 +1830,7 @@ function playIntro(from){
   const curl = (ps, r, w) => ps.map(([x, y], i) => [x + Math.cos(i * w) * r, y + Math.sin(i * w) * r]);
   const scrib = [...curl(wob(.7, 1.2), 1.5, 1.25), ...wob(2.9, 2.3).reverse(), ...curl(wob(5.1, 1.6, 0, .96), 1.1, .9)];
   const toD = ps => "M" + ps.map(q => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L");
-  const sketch = [{ d: toD(scrib), w: 2.5, c: "#fff", f: 1 }];
+  const sketch = [{ d: toD(scrib), pts: scrib, w: 2.5, c: "#fff", f: 1 }];
   page.querySelector(".in-ink").innerHTML = sketch.map(l => `<path d="${l.d}" stroke="${l.c}" stroke-width="${l.w}"/>`).join("");
   const ink = [...page.querySelectorAll(".in-ink path")];
   let done = false; const anims = [], timers = [];
@@ -1863,7 +1863,7 @@ function playIntro(from){
   ], { delay: FALL - 30, duration: 560 });
   /* 3) Der Stift kritzelt das S des Icons auf die Seite. Tinte und Stiftspitze werden in JEDEM Bild gemeinsam aus derselben Uhr
      berechnet (nicht als zwei getrennte Animationen) – sonst läuft auf dem iPad die Tinte dem Stift hinterher, wenn die App
-     gleichzeitig lädt. pathLength=1: Länge der Tinte unabhängig davon, wie der Browser die Pfadlänge misst. */
+     gleichzeitig lädt. */
   const W0 = 760, SPEED = .5, GAP = 90; /* SPEED = Seiten-Einheiten pro ms */
   const clk = document.createElement("i"); clk.hidden = true; ov.appendChild(clk);
   const clockA = A(clk, [{ opacity: 0 }, { opacity: 1 }], { duration: 60000, fill: "none" }); /* gemeinsame Uhr, läuft im Takt aller anderen Animationen */
@@ -1871,26 +1871,28 @@ function playIntro(from){
   const segs = []; let t = W0;
   ink.forEach((p, i) => {
     if (i) t += GAP;
-    const len = p.getTotalLength(), dur = len / SPEED / sketch[i].f, n = Math.max(4, Math.round(len / 1.5)), sp = [];
-    for (let j = 0; j <= n; j++) { const q = p.getPointAtLength(len * j / n); sp.push([q.x, q.y]); }
-    p.setAttribute("pathLength", "1"); p.style.strokeDasharray = "1 3"; p.style.strokeDashoffset = "1.05";
-    segs.push({ p, t0: t, dur, sp }); t += dur;
+    /* Länge selbst aus den Punkten berechnen (Safari misst Pfade anders als Chrome) */
+    const sp = sketch[i].pts, cum = [0]; for (let j = 1; j < sp.length; j++) cum.push(cum[j - 1] + Math.hypot(sp[j][0] - sp[j - 1][0], sp[j][1] - sp[j - 1][1]));
+    const len = cum[cum.length - 1], dur = len / SPEED / sketch[i].f;
+    p.setAttribute("d", ""); segs.push({ p, t0: t, dur, sp, cum, len, shown: -1 }); t += dur;
   });
   const T1 = t, first = segs[0].sp[0], lastSp = segs[segs.length - 1].sp, last = lastSp[lastSp.length - 1];
   const cl01 = x => x < 0 ? 0 : x > 1 ? 1 : x, smooth = x => x * x * (3 - 2 * x), lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
-  const at = (sp, u) => { const f = u * (sp.length - 1), i = Math.min(sp.length - 2, Math.floor(f)); return lerp(sp[i], sp[i + 1], f - i); };
+  /* Punkt bei Anteil u der Länge (über die aufsummierten Teilstücke) → Index und genaue Stelle */
+  const at = (g, u) => { const L = u * g.len; let lo = 0, hi = g.cum.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (g.cum[m] <= L) lo = m; else hi = m; } const sl = g.cum[hi] - g.cum[lo] || 1; return { i: lo, q: lerp(g.sp[lo], g.sp[hi], (L - g.cum[lo]) / sl) }; };
   pen.style.opacity = "0";
   const penFrame = () => {
     if (done || !ov.isConnected) return;
     const c = clockA.currentTime;
     if (c != null) {
-      segs.forEach(g => { const u = cl01((c - g.t0) / g.dur); g.p.style.strokeDashoffset = u <= 0 ? "1.05" : String(1 - u); });
+      /* Tinte = genau die Punkte bis zur aktuellen Stiftspitze → Tinte und Spitze können nicht auseinanderlaufen */
+      segs.forEach(g => { const u = cl01((c - g.t0) / g.dur); if (u === g.shown) return; g.shown = u; if (u <= 0) { g.p.setAttribute("d", ""); return; } const h = at(g, u); g.p.setAttribute("d", toD(g.sp.slice(0, h.i + 1).concat([h.q]))); });
       let pos, op = 1;
       if (c < W0) { const a = cl01((c - (W0 - 180)) / 180); pos = lerp([first[0] + 40, first[1] - 45], first, smooth(a)); op = a; }
       else if (c >= T1) { const a = cl01((c - T1) / 280); pos = lerp(last, [last[0] + 45, last[1] - 60], smooth(a)); op = 1 - a; }
       else {
         const gi = segs.findIndex(g => c < g.t0 + g.dur), g = segs[gi];
-        pos = c >= g.t0 ? at(g.sp, (c - g.t0) / g.dur) : lerp(segs[gi - 1].sp[segs[gi - 1].sp.length - 1], g.sp[0], smooth((c - (g.t0 - GAP)) / GAP));
+        pos = c >= g.t0 ? at(g, (c - g.t0) / g.dur).q : lerp(segs[gi - 1].sp[segs[gi - 1].sp.length - 1], g.sp[0], smooth((c - (g.t0 - GAP)) / GAP));
       }
       pen.style.opacity = String(op); pen.style.transform = tipAt(pos[0], pos[1]);
       if (c > T1 + 300) return;
