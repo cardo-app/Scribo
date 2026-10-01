@@ -1527,26 +1527,26 @@ function drawStroke(x, s){
   }
   x.fill(penPath(P, s.w));
 }
-/* Stift-Strich als eine glatte, gefüllte Fläche: Dicke folgt dem (geglätteten) Stiftdruck weich, Ränder als Kurven,
-   runde Enden – keine Stufen und Nähte wie bei vielen einzelnen Linienstücken */
+/* Stift-Strich als eine einzige gefüllte Fläche aus lauter überlappenden runden Stücken (Kreis an jedem Punkt + Verbindungsstück).
+   Alle Teile haben dieselbe Umlaufrichtung und verschmelzen deshalb lückenlos – keine Risse/Zacken, egal wie dicht die Punkte liegen.
+   Dicke folgt dem geglätteten Stiftdruck weich. */
 function penPath(P, w, extra){
   const n0 = P.length / 3, n = n0 + (extra ? extra.length / 3 : 0), path = new Path2D();
   if (!n0) return path;
   const X = i => i < n0 ? P[i * 3] : extra[(i - n0) * 3], Y = i => i < n0 ? P[i * 3 + 1] : extra[(i - n0) * 3 + 1], Pr = i => i < n0 ? P[i * 3 + 2] : extra[(i - n0) * 3 + 2];
-  const R = new Array(n); let pr = Pr(0);
-  for (let i = 0; i < n; i++) { pr = i ? pr * .7 + Pr(i) * .3 : pr; R[i] = w * (.42 + .78 * Math.min(pr, 1)) / 2; }
-  if (n === 1) { path.arc(X(0), Y(0), R[0], 0, 6.2832); return path; }
-  const L = [], Rt = [], A = [];
+  let pr = Pr(0), px = 0, py = 0, pr0 = 0;
   for (let i = 0; i < n; i++) {
-    const a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1); let dx = X(b) - X(a), dy = Y(b) - Y(a); const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
-    const nx = -dy * R[i], ny = dx * R[i]; L.push([X(i) + nx, Y(i) + ny]); Rt.push([X(i) - nx, Y(i) - ny]); A.push(Math.atan2(dx, -dy));
+    pr = i ? pr * .7 + Pr(i) * .3 : pr;
+    const x = X(i), y = Y(i), r = w * (.42 + .78 * Math.min(pr, 1)) / 2;
+    if (i) {
+      let dx = x - px, dy = y - py; const l = Math.hypot(dx, dy);
+      if (l > .001) { dx /= l; dy /= l; const ax = -dy, ay = dx;
+        path.moveTo(px - ax * pr0, py - ay * pr0); path.lineTo(x - ax * r, y - ay * r); path.lineTo(x + ax * r, y + ay * r); path.lineTo(px + ax * pr0, py + ay * pr0); path.closePath(); }
+    }
+    path.moveTo(x + r, y); path.arc(x, y, r, 0, 6.2832, false); path.closePath(); /* gleiche Umlaufrichtung wie die Verbindungsstücke */
+    px = x; py = y; pr0 = r;
   }
-  const side = (S, rev) => { const m = S.length, g = k => S[rev ? m - 1 - k : k]; for (let k = 1; k < m - 1; k++) { const c = g(k), d = g(k + 1); path.quadraticCurveTo(c[0], c[1], (c[0] + d[0]) / 2, (c[1] + d[1]) / 2); } path.lineTo(g(m - 1)[0], g(m - 1)[1]); };
-  path.moveTo(L[0][0], L[0][1]); side(L, false);
-  path.arc(X(n - 1), Y(n - 1), R[n - 1], A[n - 1], A[n - 1] - Math.PI, true);
-  side(Rt, true);
-  path.arc(X(0), Y(0), R[0], A[0] + Math.PI, A[0], true);
-  path.closePath(); return path;
+  return path;
 }
 function moveStroke(s, dx, dy){ const P = s.pts; for (let i = 0; i < P.length; i += 3) { P[i] += dx; P[i + 1] += dy; } s.bb[0] += dx; s.bb[2] += dx; s.bb[1] += dy; s.bb[3] += dy; }
 function drawTpl(x, pm, k){
