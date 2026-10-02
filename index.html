@@ -1580,7 +1580,7 @@ function drawStroke(x, s){
 /* Stift-Strich als eine einzige gefüllte Fläche aus lauter überlappenden runden Stücken (Kreis an jedem Punkt + Verbindungsstück).
    Alle Teile haben dieselbe Umlaufrichtung und verschmelzen deshalb lückenlos – keine Risse/Zacken, egal wie dicht die Punkte liegen.
    Dicke folgt dem geglätteten Stiftdruck weich. */
-function penPath(P, w, extra){
+function penPath(P, w, extra, from, to){
   const n0 = P.length / 3, n = n0 + (extra ? extra.length / 3 : 0), path = new Path2D();
   if (!n0) return path;
   const X = new Float64Array(n), Y = new Float64Array(n), Rr = new Float64Array(n);
@@ -1600,9 +1600,10 @@ function penPath(P, w, extra){
     path.moveTo(x + r, y); path.arc(x, y, r, 0, 6.2832, false); path.closePath(); /* gleiche Umlaufrichtung wie die Verbindungsstücke */
     px = x; py = y; pr0 = r; first = false;
   };
-  put(X[0], Y[0], Rr[0]);
+  const a0 = Math.max(0, Math.min(from || 0, n - 1)), b0 = to == null ? n - 1 : Math.min(to, n - 1);
+  put(X[a0], Y[a0], Rr[a0]);
   /* zwischen den Punkten eine weiche Kurve (zentripetale Catmull-Rom-Kurve) statt gerader Stücke → keine sichtbaren Kanten */
-  for (let i = 1; i < n; i++) {
+  for (let i = a0 + 1; i <= b0; i++) {
     const i0 = Math.max(0, i - 2), i3 = Math.min(n - 1, i + 1), x1 = X[i - 1], y1 = Y[i - 1], x2 = X[i], y2 = Y[i];
     const len = Math.hypot(x2 - x1, y2 - y1), steps = Math.min(24, Math.ceil(len / 1.1));
     if (steps > 1) {
@@ -1626,6 +1627,20 @@ function penPath(P, w, extra){
    (Gauß-Glocke über die Strichlänge, Breite sg). Das Fenster ist zu beiden Seiten gleich breit und wird an Anfang und Ende kleiner –
    so bleibt das Strichende genau an der Stiftspitze (keine Verzögerung) und der fertige Strich sieht aus wie beim Schreiben. */
 const INK_SG = v => (v = v || 0) * .4 + v * v * .07; /* Stärke 0–10 → Glättungsbreite in Bildschirmpunkten (oben steiler: Stark = 11) */
+/* wie smoothPts, rechnet aber nur die Punkte ab Index „from“ neu (die davor ändern sich nicht mehr) */
+function smoothFrom(R, L, sg, out, from){
+  const n = R.length / 3; out.length = R.length; if (!(sg > 0) || n < 3) { for (let i = from * 3; i < R.length; i++) out[i] = R[i]; return out; }
+  const k2 = -1 / (2 * sg * sg), L0 = L[0], Ln = L[n - 1];
+  for (let i = from; i < n; i++) {
+    const li = L[i], h = Math.min(3 * sg, li - L0, Ln - li); out[i * 3 + 2] = R[i * 3 + 2];
+    if (h < 1e-4) { out[i * 3] = R[i * 3]; out[i * 3 + 1] = R[i * 3 + 1]; continue; }
+    let sx = R[i * 3], sy = R[i * 3 + 1], sw = 1;
+    for (let j = i - 1; j >= 0 && li - L[j] <= h; j--) { const d = li - L[j], w = Math.exp(d * d * k2); sx += R[j * 3] * w; sy += R[j * 3 + 1] * w; sw += w; }
+    for (let j = i + 1; j < n && L[j] - li <= h; j++) { const d = L[j] - li, w = Math.exp(d * d * k2); sx += R[j * 3] * w; sy += R[j * 3 + 1] * w; sw += w; }
+    out[i * 3] = sx / sw; out[i * 3 + 1] = sy / sw;
+  }
+  return out;
+}
 function smoothPts(R, L, sg){
   const n = R.length / 3; if (!(sg > 0) || n < 3) return R.slice();
   const out = new Array(R.length), k2 = -1 / (2 * sg * sg), L0 = L[0], Ln = L[n - 1];
@@ -1863,7 +1878,8 @@ const inkQ = new Set(); let inkRaf = 0;
 const schedInk = p => { inkQ.add(p); if (!inkRaf) inkRaf = requestAnimationFrame(() => { inkRaf = 0; inkQ.forEach(drawInk); inkQ.clear(); }); };
 function pgInd(){ const el = $("#pgind"); if (el) el.textContent = (ED.cur + 1) + " / " + ED.pages.length; }
 const curIdx = () => clamp(ED.cur || 0, 0, Math.max(0, ED.pages.length - 1));
-function ctxOf(p, c){ const r = p.reg, x = c.getContext("2d"), res = c.width / r.w, k = res * p.sc; x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); x.setTransform(k, 0, 0, k, -r.x * res, -r.y * res); return x; }
+function regT(p, c, x){ const r = p.reg, res = c.width / r.w, k = res * p.sc; x.setTransform(k, 0, 0, k, -r.x * res, -r.y * res); }
+function ctxOf(p, c){ const x = c.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); regT(p, c, x); return x; }
 function drawInk(p){
   const r = p.reg; if (!r || !p.ink.width) return;
   const x = ctxOf(p, p.ink), u0 = r.x / p.sc, v0 = r.y / p.sc, u1 = (r.x + r.w) / p.sc, v1 = (r.y + r.h) / p.sc;
@@ -1912,6 +1928,8 @@ function startLive(){
   if (c.width !== p.ink.width || c.height !== p.ink.height) { c.width = p.ink.width; c.height = p.ink.height; }
   Object.assign(c.style, { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px" });
   DR.lx = ctxOf(p, c);
+  const b = ED.liveBuf || (ED.liveBuf = document.createElement("canvas")); if (b.width !== c.width || b.height !== c.height) { b.width = c.width; b.height = c.height; }
+  DR.bx = ctxOf(p, b);
 }
 function clearLive(){ const c = ED.live; if (!c || !c.width) return; const x = c.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); }
 let liveQ = 0;
@@ -1921,8 +1939,13 @@ function liveDraw(){
   if (DR.s) {
     const s = DR.s, n = s.pts.length / 3;
     if (s.t === "h") { ctxOf(DR.p, ED.live); drawStroke(x, s); return; }
-    /* ganzen Strich in jedem Bild neu zeichnen – genau so, wie er nach dem Absetzen aussieht; dazu die vom System vorhergesagten nächsten Punkte (kleinerer Abstand zur Stiftspitze) */
-    ctxOf(DR.p, ED.live); x.fillStyle = s.c; x.fill(penPath(s.pts, s.w, DR.pred));
+    /* Schnell: der fertige Teil (ändert sich nicht mehr) wird nur einmal in einen Zwischenspeicher gezeichnet, pro Bild kommt nur das kurze Ende dazu (plus die vom System vorhergesagten nächsten Punkte → kleinerer Abstand zur Stiftspitze) */
+    const L = DR.L, Ln = L[L.length - 1], lim = 3 * DR.sg; let f = n - 1; while (f > 0 && Ln - L[f] < lim) f--;
+    const upto = f - 2; /* die weiche Kurve braucht auch den nächsten Punkt */
+    if (upto > DR.done && upto > 0) { DR.bx.fillStyle = s.c; DR.bx.fill(penPath(s.pts, s.w, null, Math.max(0, DR.done), upto)); DR.done = upto; }
+    const c = ED.live; x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); x.drawImage(ED.liveBuf, 0, 0);
+    regT(DR.p, c, x);
+    x.fillStyle = s.c; x.fill(penPath(s.pts, s.w, DR.pred, Math.max(0, DR.done)));
   } else if (DR.poly) {
     const P = DR.poly, sc = DR.p.sc; ctxOf(DR.p, ED.live);
     x.lineWidth = 1.6 / sc; x.setLineDash([6 / sc, 5 / sc]); x.strokeStyle = "#2962FF"; x.fillStyle = "rgba(41,98,255,.06)";
@@ -1948,7 +1971,7 @@ function onDown(e){
   if (TS.tool === "pen" || TS.tool === "hl") {
     const t = TS.tool === "hl" ? "h" : "p", cfg = TS[TS.tool];
     DR.s = { id: uid(), t, c: cfg.c, w: (t === "h" ? HL_W : PEN_W)[cfg.w], pts: [pt.x, pt.y, pt.pr] }; DR.drawn = 0; DR.dot = false; DR.minD = Math.max(.1, .45 / p.sc);
-    DR.R = [pt.x, pt.y, pt.pr]; DR.L = [0]; DR.sg = INK_SG(S.set.ink ?? 4) / p.sc;
+    DR.R = [pt.x, pt.y, pt.pr]; DR.L = [0]; DR.sg = INK_SG(S.set.ink ?? 4) / p.sc; DR.done = -1;
     startLive(); liveDraw();
   } else if (TS.tool === "er") { DR.removed = []; DR.last = pt; if (TS.er.m === "part") { DR.part = true; DR.before = p.strokes.slice(); DR.cut = false; } (DR.part ? cutSeg : eraseSeg)(pt, pt); ecur(e); }
   else { DR.poly = [pt.x, pt.y]; startLive(); }
@@ -1959,8 +1982,10 @@ function onMove(e){
   let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null; if (!evs || !evs.length) evs = [e];
   if (DR.s) {
     const R = DR.R, L = DR.L, m2 = DR.minD * DR.minD; /* R: echte Stiftpunkte, L: Strichlänge bis dorthin */
+    const Lold = L[L.length - 1];
     for (const ev of evs) { const pt = unitPt(ev, DR), n = R.length, dx = pt.x - R[n - 3], dy = pt.y - R[n - 2], d2 = dx * dx + dy * dy; DR.raw = pt; if (d2 < m2) { R[n - 1] = Math.max(R[n - 1], pt.pr); continue; } R.push(pt.x, pt.y, pt.pr); L.push(L[L.length - 1] + Math.sqrt(d2)); }
-    DR.s.pts = smoothPts(R, L, DR.sg); DR.pred = null;
+    let k = L.length - 1; while (k > 0 && L[k - 1] > Lold - 3 * DR.sg) k--; /* nur das Ende des Strichs kann sich durch die Glättung noch ändern */
+    DR.s.pts = smoothFrom(R, L, DR.sg, DR.s.pts, Math.max(0, k - 1)); DR.pred = null;
     if (DR.s.t === "p") { const pe = e.getPredictedEvents ? e.getPredictedEvents() : []; const q = []; if (DR.raw) q.push(DR.raw.x, DR.raw.y, DR.raw.pr); for (const ev of pe.slice(0, 3)) { const pt = unitPt(ev, DR); q.push(pt.x, pt.y, pt.pr); } if (q.length) DR.pred = q; }
     schedLive();
   } else if (DR.removed) { const f = DR.part ? cutSeg : eraseSeg; for (const ev of evs) { const pt = unitPt(ev, DR); f(DR.last, pt); DR.last = pt; } ecur(e); }
