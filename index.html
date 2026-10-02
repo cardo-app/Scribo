@@ -430,6 +430,7 @@ body.editing #main{display:none}
 #ecur{position:fixed;z-index:7;border:1.5px solid rgba(0,0,0,.55);box-shadow:0 0 0 1px rgba(255,255,255,.8);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%)}
 #pgind{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:4;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);font-weight:700;font-size:13.5px;border-radius:99px;padding:7px 12px;box-shadow:var(--shadow);font-variant-numeric:tabular-nums}
 @media (max-width:1060px){ #pgind{bottom:calc(76px + env(safe-area-inset-bottom,0px))} }
+#zov{position:fixed;pointer-events:none;z-index:2;mix-blend-mode:multiply}
 #zoomind{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:8;background:rgba(20,22,28,.78);color:#fff;font-weight:800;font-size:17px;border-radius:14px;padding:10px 16px;pointer-events:none;font-variant-numeric:tabular-nums}
 .pal{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
 .pal button{aspect-ratio:1;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
@@ -1575,7 +1576,7 @@ function drawStroke(x, s){
     if (n > 1) x.lineTo(P[n * 3 - 3], P[n * 3 - 2]);
     x.stroke(); x.globalAlpha = 1; return;
   }
-  x.fill(penPath(P, s.w));
+  x.fill(s._path || (s._path = penPath(P, s.w))); /* fertige Form wird gemerkt → Neuzeichnen geht viel schneller */
 }
 /* Stift-Strich als eine einzige gefüllte Fläche aus lauter überlappenden runden Stücken (Kreis an jedem Punkt + Verbindungsstück).
    Alle Teile haben dieselbe Umlaufrichtung und verschmelzen deshalb lückenlos – keine Risse/Zacken, egal wie dicht die Punkte liegen.
@@ -1654,7 +1655,7 @@ function smoothPts(R, L, sg){
   }
   return out;
 }
-function moveStroke(s, dx, dy){ const P = s.pts; for (let i = 0; i < P.length; i += 3) { P[i] += dx; P[i + 1] += dy; } s.bb[0] += dx; s.bb[2] += dx; s.bb[1] += dy; s.bb[3] += dy; }
+function moveStroke(s, dx, dy){ const P = s.pts; s._path = null; for (let i = 0; i < P.length; i += 3) { P[i] += dx; P[i + 1] += dy; } s.bb[0] += dx; s.bb[2] += dx; s.bb[1] += dy; s.bb[3] += dy; }
 function drawTpl(x, pm, k){
   const t = pm.t || "blank", W = pm.w, H = pm.h; if (t === "blank") return;
   x.save(); x.lineWidth = Math.max(1 / k, .6);
@@ -2180,13 +2181,38 @@ function gStart(pt){
   const sc = $("#scroller"), r = sc.getBoundingClientRect();
   G.on = true; G.k = 1; G.r = r; G.m0 = { x: pt.x - r.left + sc.scrollLeft, y: pt.y - r.top + sc.scrollTop }; G.s1 = { x: pt.x - r.left, y: pt.y - r.top };
   const m = $("#selmenu"); if (m) m.hidden = true;
+  zovStart();
 }
+/* Während des Zoomens mit zwei Fingern: Striche laufend in voller Schärfe direkt auf eine Fläche über dem Bildschirm zeichnen
+   (sonst sähe man nur das vergrößerte alte Bild mit groben Pixeln, bis man loslässt) */
+let zovQ = 0;
+function zovStart(){
+  const sc = $("#scroller"), r = sc.getBoundingClientRect(), d = DPR(); let c = $("#zov");
+  if (!c) { c = document.createElement("canvas"); c.id = "zov"; sc.after(c); }
+  const W = Math.round(r.width * d), H = Math.round(r.height * d); if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+  Object.assign(c.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" }); c.hidden = false;
+  G.zr = r; zovDraw(); ED.pages.forEach(p => { if (p.ink) p.ink.style.visibility = "hidden"; });
+}
+function zovDraw(){
+  zovQ = 0; const c = $("#zov"); if (!c || c.hidden) return;
+  const x = c.getContext("2d"), r = G.zr, d = c.width / r.width; x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
+  for (const p of ED.pages) {
+    const b = p.el.getBoundingClientRect(); if (b.right < r.left || b.left > r.right || b.bottom < r.top || b.top > r.bottom || !p.strokes || !p.strokes.length) continue;
+    const k = b.width / p.m.w, u0 = (r.left - b.left) / k, v0 = (r.top - b.top) / k, u1 = (r.right - b.left) / k, v1 = (r.bottom - b.top) / k;
+    x.save(); x.setTransform(d, 0, 0, d, -r.left * d, -r.top * d); x.beginPath(); x.rect(b.left, b.top, b.width, b.height); x.clip();
+    x.transform(k, 0, 0, k, b.left, b.top);
+    for (const pass of ["h", "p"]) for (const s of p.strokes) { if (s.t !== pass || s.bb[2] < u0 || s.bb[0] > u1 || s.bb[3] < v0 || s.bb[1] > v1) continue; drawStroke(x, s); }
+    x.restore();
+  }
+}
+function zovEnd(){ const c = $("#zov"); if (c) { c.hidden = true; const x = c.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); } ED.pages.forEach(p => { if (p.ink) p.ink.style.visibility = ""; }); }
 function gMove(k, pt){
   if (!G.on) return; const sc = $("#scroller");
   G.k = clamp(ED.zoom * k, ZMIN, ZMAX) / ED.zoom; G.s1 = { x: pt.x - G.r.left, y: pt.y - G.r.top };
   const tx = G.s1.x + sc.scrollLeft - G.k * G.m0.x, ty = G.s1.y + sc.scrollTop - G.k * G.m0.y;
   $("#pages").style.transform = `translate(${tx}px,${ty}px) scale(${G.k})`;
   zoomInd(ED.zoom * G.k);
+  if (!zovQ) zovQ = requestAnimationFrame(zovDraw);
 }
 function gEnd(){
   if (!G.on) return; G.on = false;
@@ -2194,7 +2220,7 @@ function gEnd(){
   const a = anchorAt(G.m0.x, G.m0.y);
   $("#pages").style.transform = ""; ED.zoom = z; layout();
   if (a) { const pos = { x: a.p.left + a.u * a.p.sc, y: a.p.top + a.v * a.p.sc }; sc.scrollLeft = pos.x - G.s1.x; sc.scrollTop = pos.y - G.s1.y; }
-  updateVisible(true); zoomInd(z, true); savePos(); if (ED.sel) showSel();
+  updateVisible(true); zovEnd(); zoomInd(z, true); savePos(); if (ED.sel) showSel();
 }
 function anchorAt(x, y){ let best = null, bd = Infinity; for (const p of ED.pages) { const d = y < p.top ? p.top - y : y > p.top + p.cssH ? y - p.top - p.cssH : 0; if (d < bd) { bd = d; best = p; } } return best && { p: best, u: (x - best.left) / best.sc, v: (y - best.top) / best.sc }; }
 function zoomTo(z, pt){ const sc = $("#scroller"), r = sc.getBoundingClientRect(); pt = pt || { x: r.left + r.width / 2, y: r.top + r.height / 3 }; gStart(pt); gMove(z / ED.zoom, pt); gEnd(); }
