@@ -552,6 +552,10 @@ body[data-glass="2"] :is(#tabs,#sheet.glass .sheet,.glp-bar,#menu){-webkit-backd
 .glr-l{display:flex;justify-content:space-between;margin-top:6px;font-size:14px;font-weight:600;color:var(--muted)}
 .glr-l span{flex:1}.glr-l span:nth-child(2){text-align:center}.glr-l span:last-child{text-align:right}
 .glr-l span.on{color:var(--ink);font-weight:800}
+.inkpad{position:relative;margin:0 0 14px;border-radius:16px;overflow:hidden;background:#fff;box-shadow:inset 0 0 0 1px var(--line);touch-action:none;-webkit-user-select:none;user-select:none}
+.inkpad canvas{display:block;width:100%;height:190px;touch-action:none}
+.inkpad .ip-h{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:#9AA1AE;font-size:15px;font-weight:600;pointer-events:none;transition:opacity .2s}
+.inkpad .ip-x{position:absolute;right:8px;top:8px;border:0;border-radius:99px;padding:5px 11px;font:600 13.5px var(--body);background:#EEF0F4;color:#4A5060}
 /* Innere Flächen: kleine Glasblasen wie die Tab-Blase */
 #sheet.glass :is(.set-list,.gs-opt,.seg,.in,.set-group,.stat,.panel){background:var(--gl-card);border-color:transparent;
   box-shadow:inset 0 0 0 .5px var(--gl-rim),inset 0 1.5px 1px -.5px var(--gl-edge),0 2px 8px rgba(0,0,0,.05)}
@@ -766,7 +770,7 @@ THEME_IC.cardo = '<svg viewBox="0 0 512 512"><path d="M320 165A116 116 0 1 0 320
 NEUTRAL_IC.cardo = ["#FFFFFF", "#1B1D23"];
 const S = { view: "home", fid: null, filter: "all", folders: {}, notes: {}, thumbs: {}, sync: "local", cardoLook: "auto" };
 const SET_KEY = "notizen-settings";
-S.set = { look: "cardo", finger: "auto", glass: 1, splash: "daily", scratch: null };
+S.set = { look: "cardo", finger: "auto", ink: 4, glass: 1, splash: "daily", scratch: null };
 try { const v = JSON.parse(localStorage.getItem(SET_KEY) || "null"); if (v) S.set = { ...S.set, ...v }; } catch {}
 try { S.cardoLook = localStorage.getItem("notizen-cardo-look") || "auto"; } catch {}
 try { const u = JSON.parse(localStorage.getItem("notizen-ui") || "null"); if (u) { S.view = ["home","folder","settings","pad"].includes(u.view) ? u.view : "home"; S.fid = u.fid || null; S.filter = u.filter || "all"; S.libFid = u.lib || null; } } catch {}
@@ -792,7 +796,7 @@ function applyTheme(){
 function hexColor(c){ try { const cv = hexColor.cv || (hexColor.cv = document.createElement("canvas")); cv.width = cv.height = 1; const x = cv.getContext("2d"); x.clearRect(0, 0, 1, 1); x.fillStyle = "#000"; x.fillStyle = c; x.fillRect(0, 0, 1, 1); const d = x.getImageData(0, 0, 1, 1).data; return "#" + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, "0")).join(""); } catch { return ""; } }
 darkMQ.addEventListener && darkMQ.addEventListener("change", applyTheme);
 applyTheme();
-function writeSettings(){ if (DB) DB.write("settings/main", { look: S.set.look, finger: S.set.finger, glass: S.set.glass ?? 1, splash: S.set.splash || "daily", scratch: S.set.scratch || null }); }
+function writeSettings(){ if (DB) DB.write("settings/main", { look: S.set.look, finger: S.set.finger, ink: S.set.ink ?? 4, glass: S.set.glass ?? 1, splash: S.set.splash || "daily", scratch: S.set.scratch || null }); }
 function saveSettings(patch){
   S.set = { ...S.set, ...patch }; applyTheme();
   try { localStorage.setItem(SET_KEY, JSON.stringify(S.set)); } catch {}
@@ -974,7 +978,7 @@ function pull(){
   DB.meta.forEach((d, p) => { const i = p.indexOf("/"), c = p.slice(0, i), id = p.slice(i + 1); if (c === "folders") f[id] = d; else if (c === "notes") n[id] = d; else if (c === "thumbs") t[id] = d; });
   S.folders = f; S.notes = n; S.thumbs = t;
   const st = DB.meta.get("settings/main");
-  if (st && ["look", "finger", "glass", "splash", "scratch"].some(k => st[k] !== undefined && st[k] !== S.set[k])) { ["look", "finger", "glass", "splash", "scratch"].forEach(k => { if (st[k] !== undefined && st[k] !== null) S.set[k] = st[k]; }); try { localStorage.setItem(SET_KEY, JSON.stringify(S.set)); } catch {} applyTheme(); }
+  if (st && ["look", "finger", "ink", "glass", "splash", "scratch"].some(k => st[k] !== undefined && st[k] !== S.set[k])) { ["look", "finger", "ink", "glass", "splash", "scratch"].forEach(k => { if (st[k] !== undefined && st[k] !== null) S.set[k] = st[k]; }); try { localStorage.setItem(SET_KEY, JSON.stringify(S.set)); } catch {} applyTheme(); }
   if (ED.on) ED.metaChanged(); else render();
 }
 
@@ -1275,6 +1279,46 @@ function glassSheet(){
 function lookSheet(){
   openSheet(`${headC("Thema")}<p class="muted" style="margin:0 0 16px;font-size:15.5px">${S.set.look === "cardo" ? "„Wie Cardo“ übernimmt automatisch das Thema, das du in Cardo gewählt hast." : "Hell, Dunkel und System sind schlicht schwarz-weiß. Ein Farbthema färbt die ganze App ein. System folgt deinem Gerät."}</p><div id="lookPick">${lookPickerHTML()}</div>`);
 }
+const INK_L = v => !v ? "Aus" : v <= 3 ? "Leicht" : v <= 6 ? "Mittel" : "Stark";
+function inkLabelsHTML(){ const v = S.set.ink ?? 4, k = !v ? 0 : v <= 6 ? 1 : 2; return ["Aus", "Mittel", "Stark"].map((l, i) => `<span class="${i === k ? 'on' : ''}">${l}</span>`).join(""); }
+function inkSheet(){
+  openSheet(`${headC("Schreibhilfe")}<p class="muted" style="margin:0 0 16px;font-size:15.5px">Glättet das leichte Zittern der Hand beim Schreiben mit dem Stift. Je stärker, desto ruhiger und runder werden die Striche. Probier es im Feld aus – beim Verschieben des Reglers ändert sich deine Probeschrift mit.</p>
+    <div class="inkpad"><canvas></canvas><span class="ip-h">Hier ausprobieren</span><button type="button" class="ip-x" hidden>Leeren</button></div>
+    <input class="glr" type="range" min="0" max="10" step="1" value="${S.set.ink ?? 4}" aria-label="Schreibhilfe" aria-valuetext="${INK_L(S.set.ink ?? 4)}">
+    <div class="glr-l" id="inkL">${inkLabelsHTML()}</div>`, root => {
+    const r = root.querySelector(".glr"), pad = root.querySelector(".inkpad"), c = pad.querySelector("canvas"), hint = pad.querySelector(".ip-h"), clr = pad.querySelector(".ip-x");
+    const strokes = []; let cur = null, q = 0;
+    const draw = () => {
+      q = 0; const dpr = devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+      if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+      const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+      x.strokeStyle = "#C9D3E6"; x.lineWidth = .6; x.beginPath(); for (let y = 38; y < H; y += 38) { x.moveTo(0, y); x.lineTo(W, y); } x.stroke();
+      const sg = INK_SG(+r.value); x.fillStyle = TS.pen.c || "#1B1D23";
+      for (const st of strokes) x.fill(penPath(smoothPts(st.R, st.L, sg), st.w));
+      hint.style.opacity = strokes.length ? 0 : 1; clr.hidden = !strokes.length;
+    };
+    const sched = () => { if (!q) q = requestAnimationFrame(draw); };
+    const pt = (e, b) => ({ x: e.clientX - b.left, y: e.clientY - b.top, pr: e.pointerType === "pen" ? Math.max(.05, e.pressure || .5) : .5 });
+    c.addEventListener("pointerdown", e => {
+      if (cur || e.target.closest(".ip-x")) return; e.preventDefault(); if (e.pointerType === "pen") markPen();
+      try { c.setPointerCapture(e.pointerId); } catch {}
+      const b = c.getBoundingClientRect(), p = pt(e, b);
+      cur = { id: e.pointerId, b, R: [p.x, p.y, p.pr], L: [0], w: PEN_W[TS.pen.w ?? 1] * 1.1 }; strokes.push(cur); sched();
+    });
+    c.addEventListener("pointermove", e => {
+      if (!cur || e.pointerId !== cur.id) return; e.preventDefault();
+      let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null; if (!evs || !evs.length) evs = [e];
+      for (const ev of evs) { const p = pt(ev, cur.b), R = cur.R, n = R.length, d = Math.hypot(p.x - R[n - 3], p.y - R[n - 2]); if (d < .4) continue; R.push(p.x, p.y, p.pr); cur.L.push(cur.L[cur.L.length - 1] + d); }
+      sched();
+    });
+    const up = e => { if (cur && e.pointerId === cur.id) { cur = null; sched(); } };
+    c.addEventListener("pointerup", up); c.addEventListener("pointercancel", up);
+    pad.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+    clr.addEventListener("click", () => { strokes.length = 0; sched(); });
+    r.addEventListener("input", () => { const v = +r.value; r.setAttribute("aria-valuetext", INK_L(v)); sched(); if (v === (S.set.ink ?? 4)) return; saveSettings({ ink: v }); const l = $("#inkL"); if (l) l.innerHTML = inkLabelsHTML(); });
+    requestAnimationFrame(draw);
+  });
+}
 const FINGER_OPTS = [["auto","Automatisch","Der Finger zeichnet, bis auf diesem Gerät ein Stift erkannt wurde – danach scrollt er."],["on","An","Der Finger zeichnet immer."],["off","Aus","Der Finger scrollt immer, die Hand darf aufliegen."]];
 function fingerPickerHTML(){
   const cur = S.set.finger || "auto";
@@ -1299,6 +1343,7 @@ function settingsView(){
   </div>
   <div class="set-list">
     <button class="set-item" data-act="fingerSheet"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)">${IC.hand}</span><span class="si-t">Fingerzeichnen</span><span class="si-v">${(FINGER_OPTS.find(o => o[0] === (S.set.finger || "auto")) || FINGER_OPTS[0])[1]}</span><span class="si-ch" aria-hidden="true">›</span></button>
+    <button class="set-item" data-act="inkSheet"><span class="theme-ic sm" style="--tb:var(--surface-2);--tf:var(--ink)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c2.5-6 4.5-6 6 0s3.5 6 6 0 3.5-6 6-1"/></svg></span><span class="si-t">Schreibhilfe</span><span class="si-v">${INK_L(S.set.ink ?? 4)}</span><span class="si-ch" aria-hidden="true">›</span></button>
   </div>
   <div class="set-list">
     <div class="set-item static"><span class="si-dot ${syncWarn ? 'local' : ''}"></span><span class="si-t">Synchronisierung</span><span class="si-v">${syncV}</span></div>
@@ -1547,6 +1592,23 @@ function penPath(P, w, extra){
     px = x; py = y; pr0 = r;
   }
   return path;
+}
+/* Schreibhilfe: glättet das Zittern der Hand. Jeder Punkt wird zum gewichteten Mittel seiner Nachbarn entlang des Strichs
+   (Gauß-Glocke über die Strichlänge, Breite sg). Das Fenster ist zu beiden Seiten gleich breit und wird an Anfang und Ende kleiner –
+   so bleibt das Strichende genau an der Stiftspitze (keine Verzögerung) und der fertige Strich sieht aus wie beim Schreiben. */
+const INK_SG = v => (v || 0) * .55; /* Stärke 0–10 → Glättungsbreite in Bildschirmpunkten */
+function smoothPts(R, L, sg){
+  const n = R.length / 3; if (!(sg > 0) || n < 3) return R.slice();
+  const out = new Array(R.length), k2 = -1 / (2 * sg * sg), L0 = L[0], Ln = L[n - 1];
+  for (let i = 0; i < n; i++) {
+    const li = L[i], h = Math.min(3 * sg, li - L0, Ln - li); out[i * 3 + 2] = R[i * 3 + 2];
+    if (h < 1e-4) { out[i * 3] = R[i * 3]; out[i * 3 + 1] = R[i * 3 + 1]; continue; }
+    let sx = R[i * 3], sy = R[i * 3 + 1], sw = 1;
+    for (let j = i - 1; j >= 0 && li - L[j] <= h; j--) { const d = li - L[j], w = Math.exp(d * d * k2); sx += R[j * 3] * w; sy += R[j * 3 + 1] * w; sw += w; }
+    for (let j = i + 1; j < n && L[j] - li <= h; j++) { const d = L[j] - li, w = Math.exp(d * d * k2); sx += R[j * 3] * w; sy += R[j * 3 + 1] * w; sw += w; }
+    out[i * 3] = sx / sw; out[i * 3 + 1] = sy / sw;
+  }
+  return out;
 }
 function moveStroke(s, dx, dy){ const P = s.pts; for (let i = 0; i < P.length; i += 3) { P[i] += dx; P[i + 1] += dy; } s.bb[0] += dx; s.bb[2] += dx; s.bb[1] += dy; s.bb[3] += dy; }
 function drawTpl(x, pm, k){
@@ -1851,6 +1913,7 @@ function onDown(e){
   if (TS.tool === "pen" || TS.tool === "hl") {
     const t = TS.tool === "hl" ? "h" : "p", cfg = TS[TS.tool];
     DR.s = { id: uid(), t, c: cfg.c, w: (t === "h" ? HL_W : PEN_W)[cfg.w], pts: [pt.x, pt.y, pt.pr] }; DR.drawn = 0; DR.dot = false; DR.minD = Math.max(.1, .45 / p.sc);
+    DR.R = [pt.x, pt.y, pt.pr]; DR.L = [0]; DR.sg = INK_SG(S.set.ink ?? 4) / p.sc;
     startLive(); liveDraw();
   } else if (TS.tool === "er") { DR.removed = []; DR.last = pt; eraseSeg(pt, pt); ecur(e); }
   else { DR.poly = [pt.x, pt.y]; startLive(); }
@@ -1860,9 +1923,9 @@ function onMove(e){
   e.preventDefault();
   let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null; if (!evs || !evs.length) evs = [e];
   if (DR.s) {
-    const P = DR.s.pts, m2 = DR.minD * DR.minD, sm = DR.s.t === "p" ? .62 : 1; /* sm: leichte Glättung gegen Zittern */
-    for (const ev of evs) { const pt = unitPt(ev, DR), n = P.length, x = P[n - 3] + (pt.x - P[n - 3]) * sm, y = P[n - 2] + (pt.y - P[n - 2]) * sm, dx = x - P[n - 3], dy = y - P[n - 2]; if (dx * dx + dy * dy < m2) { P[n - 1] = Math.max(P[n - 1], pt.pr); continue; } P.push(x, y, pt.pr); DR.raw = pt; }
-    DR.pred = null;
+    const R = DR.R, L = DR.L, m2 = DR.minD * DR.minD; /* R: echte Stiftpunkte, L: Strichlänge bis dorthin */
+    for (const ev of evs) { const pt = unitPt(ev, DR), n = R.length, dx = pt.x - R[n - 3], dy = pt.y - R[n - 2], d2 = dx * dx + dy * dy; DR.raw = pt; if (d2 < m2) { R[n - 1] = Math.max(R[n - 1], pt.pr); continue; } R.push(pt.x, pt.y, pt.pr); L.push(L[L.length - 1] + Math.sqrt(d2)); }
+    DR.s.pts = smoothPts(R, L, DR.sg); DR.pred = null;
     if (DR.s.t === "p") { const pe = e.getPredictedEvents ? e.getPredictedEvents() : []; const q = []; if (DR.raw) q.push(DR.raw.x, DR.raw.y, DR.raw.pr); for (const ev of pe.slice(0, 3)) { const pt = unitPt(ev, DR); q.push(pt.x, pt.y, pt.pr); } if (q.length) DR.pred = q; }
     schedLive();
   } else if (DR.removed) { for (const ev of evs) { const pt = unitPt(ev, DR); eraseSeg(DR.last, pt); DR.last = pt; } ecur(e); }
@@ -1875,7 +1938,7 @@ function onUp(e){
   const d = DR; DR = null; if (liveQ) { cancelAnimationFrame(liveQ); liveQ = 0; }
   const p = d.p;
   if (d.s) {
-    const s = d.s; if (d.raw && s.t === "p") { const P = s.pts, n = P.length; if (Math.hypot(d.raw.x - P[n - 3], d.raw.y - P[n - 2]) > .05) P.push(d.raw.x, d.raw.y, d.raw.pr); } bbox(s); p.strokes.push(s);
+    const s = d.s; if (d.raw && d.R) { const R = d.R, n = R.length, l = Math.hypot(d.raw.x - R[n - 3], d.raw.y - R[n - 2]); if (l > .05) { R.push(d.raw.x, d.raw.y, d.raw.pr); d.L.push(d.L[d.L.length - 1] + l); } s.pts = smoothPts(R, d.L, d.sg); } bbox(s); p.strokes.push(s);
     if (s.t === "h") drawInk(p); else if (p.ink.width) { const x = p.ink.getContext("2d"), r = p.reg, res = p.ink.width / r.w, k = res * p.sc; x.setTransform(k, 0, 0, k, -r.x * res, -r.y * res); drawStroke(x, s); }
     clearLive(); pushUndo({ t: "add", pid: p.id, s: [s] }); markDirty(p);
   } else if (d.removed) { $("#ecur").hidden = true; if (d.removed.length) { pushUndo({ t: "del", pid: p.id, items: d.removed }); markDirty(p); } }
@@ -2249,7 +2312,7 @@ const ACT = {
   filter: el => { S.filter = el.dataset.v; saveUi(); render(); },
   setLook: el => saveSettings({ look: el.dataset.v }),
   nav: el => { const v = el.dataset.v; if (tabOf(S.view) === v) { if (v === "lib" && S.view === "folder") go("home", null); return; } goTab(v); },
-  lookSheet, glassSheet, splashSheet, fingerSheet, accountSheet,
+  lookSheet, glassSheet, splashSheet, fingerSheet, inkSheet, accountSheet,
   setSplash: el => saveSettings({ splash: el.dataset.v }),
   playIntro: () => { if (document.getElementById("intro")) return; closeSheet(); setTimeout(() => playIntro(null), 260); },
   setFinger: el => saveSettings({ finger: el.dataset.v }),
