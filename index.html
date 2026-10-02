@@ -403,12 +403,15 @@ body.editing #main{display:none}
 .tsz.on i{background:var(--ink)}
 .tools[data-t="er"] .tcols,.tools[data-t="lasso"] .tcols,.tools[data-t="lasso"] .tszs,.tools[data-t="er"] .tsep.c,.tools[data-t="lasso"] .tsep.c{display:none}
 .tools[data-t="lasso"] .tsep.s{display:none}
-.tcols,.tszs{display:flex;align-items:center;gap:1px}
+.tcols,.tszs,.tems{display:flex;align-items:center;gap:1px}
+.tem{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:var(--muted);flex:none}
+.tem svg{width:22px;height:22px}
+.tem.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}
 @media (max-width:1060px){ .ed-top .tools{display:none} }
 @media (min-width:1061px){ #toolsB{display:none} }
 #toolsB{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:4;max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none}
 #toolsB::-webkit-scrollbar{display:none}
-@media (max-width:440px){ .tool{width:38px}.tcol{width:30px}.tsz{width:26px}.tsep{margin:0 1px}.tcols .tcol:nth-child(4){display:none} }
+@media (max-width:440px){ .tem{width:32px}.tool{width:38px}.tcol{width:30px}.tsz{width:26px}.tsep{margin:0 1px}.tcols .tcol:nth-child(4){display:none} }
 #scroller{flex:1;overflow:auto;position:relative;touch-action:pan-x pan-y;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #sizer{position:relative;overflow:hidden}
 #pages{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0}
@@ -693,6 +696,8 @@ const IC = {
   pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z"/><path d="M14.5 5.5l3 3"/></svg>',
   hl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-2 2v3h3l2-2"/><path d="M9 14l7.5-7.5a2.1 2.1 0 0 1 3 3L12 17z"/><path d="M4 21h7"/></svg>',
   er:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 20H20M5.2 15.3l9.9-9.9a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L12 18.5a4 4 0 0 1-2.8 1.2H8a2 2 0 0 1-1.4-.6l-1.4-1.4a1.7 1.7 0 0 1 0-2.4z"/><path d="M9.5 11l5 5"/></svg>',
+  erObj:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14c2.5-5 4.5-5 6 0s3.5 5 6 0" opacity=".35"/><path d="M16 15l5 5M21 15l-5 5"/></svg>',
+  erPart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c1.5-3 3-4 4.5-3M16.5 10c1.5 1 3 1 4.5-1"/><circle cx="12" cy="11.5" r="3.6" stroke-dasharray="2.2 1.8"/></svg>',
   lasso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 2.6"><path d="M12 4c5 0 9 2.5 9 6s-4 6-9 6-9-2.5-9-6 4-6 9-6z"/><path d="M7 15.5c-1 1.5-1 3 .5 4.5" stroke-dasharray="none"/></svg>',
   logo:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><mask id="lgm" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect width="512" height="512" fill="#fff"/><circle cx="256" cy="256" r="41" fill="#000"/></mask><filter id="lgs" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1B1D23" flood-opacity=".22"/></filter><radialGradient id="lgd" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FF7A55"/><stop offset="1" stop-color="#F2491F"/></radialGradient></defs><rect fill="#FFFFFF"/><g transform="translate(256 256) scale(1.24) translate(-256 -256)"><g filter="url(#lgs)"><g mask="url(#lgm)" fill="none" stroke="#1E1F24" stroke-width="50" stroke-linecap="round"><path d="M332.17 165.22A118.5 118.5 0 0 0 179.83 165.22C137.70 200.58 186.00 256.00 256 256"/><path d="M179.83 346.78A118.5 118.5 0 0 0 332.17 346.78C374.30 311.42 326.00 256.00 256 256"/></g><circle cx="256" cy="256" r="29" fill="url(#lgd)"/></g></g></svg>'
 };
@@ -1546,9 +1551,9 @@ const DPR = () => Math.min(window.devicePixelRatio || 1, 3);
 const MAXPX = 7e6, ZMIN = .5, ZMAX = 5, GAP = 16;
 const PEN_COLORS = ["#1B1D23","#6B7080","#2F6FE0","#00A3B4","#1E8C57","#7CB342","#D93A3F","#FF6A00","#C9A400","#8C3DFF","#FF2DB4","#8B5A2B"];
 const HL_COLORS = ["#FFE600","#FFB300","#00E676","#00E5FF","#FF4FD8","#B388FF"];
-const PEN_W = [1.8, 3, 5], HL_W = [12, 20, 32], ER_W = [7, 14, 28];
-let TS = { tool: "pen", pen: { c: "#1B1D23", w: 1, rec: ["#1B1D23","#2F6FE0","#D93A3F","#1E8C57"] }, hl: { c: "#FFE600", w: 1, rec: ["#FFE600","#00E676","#FF4FD8","#00E5FF"] }, er: { w: 1 } };
-try { const t = JSON.parse(localStorage.getItem("notizen-tools") || "null"); if (t && t.pen && t.hl) TS = { ...TS, ...t, tool: ["pen","hl","er","lasso"].includes(t.tool) ? t.tool : "pen" }; } catch {}
+const PEN_W = [1.8, 3, 5], HL_W = [12, 20, 32], ER_W = [14, 28, 50];
+let TS = { tool: "pen", pen: { c: "#1B1D23", w: 1, rec: ["#1B1D23","#2F6FE0","#D93A3F","#1E8C57"] }, hl: { c: "#FFE600", w: 1, rec: ["#FFE600","#00E676","#FF4FD8","#00E5FF"] }, er: { w: 1, m: "obj" } };
+try { const t = JSON.parse(localStorage.getItem("notizen-tools") || "null"); if (t && t.pen && t.hl) TS = { ...TS, ...t, er: { m: "obj", ...(t.er || {}) }, tool: ["pen","hl","er","lasso"].includes(t.tool) ? t.tool : "pen" }; } catch {}
 const saveTools = () => { try { localStorage.setItem("notizen-tools", JSON.stringify(TS)); } catch {} };
 const penSeen = () => { try { return localStorage.getItem("notizen-pen") === "1"; } catch { return false; } };
 let lastPen = 0;
@@ -1664,7 +1669,8 @@ function toolsInner(){
   const cols = cfg ? cfg.rec.slice(0, 4).map(c => `<button class="tcol ${c.toLowerCase() === cfg.c.toLowerCase() ? "on" : ""}" data-col="${c}" style="--c:${c}" aria-label="Farbe"><i></i></button>`).join("") + `<button class="tcol more" data-col="more" aria-label="Weitere Farben"><i></i></button>` : "";
   const sz = t === "pen" ? [4, 7, 11] : t === "hl" ? [8, 12, 17] : [7, 11, 16];
   const szs = t === "lasso" ? "" : [0, 1, 2].map(i => `<button class="tsz ${TS[t].w === i ? "on" : ""}" data-w="${i}" aria-label="Stärke ${i + 1}"><i style="width:${sz[i]}px;height:${sz[i]}px"></i></button>`).join("");
-  return `${tb("pen", "Stift")}${tb("hl", "Marker")}${tb("er", "Radierer")}${tb("lasso", "Lasso (auswählen)")}<span class="tsep c"></span><div class="tcols">${cols}</div><span class="tsep s"></span><div class="tszs">${szs}</div>`;
+  const em = TS.er.m === "part" ? "part" : "obj", ems = t === "er" ? `<span class="tsep m"></span><div class="tems"><button class="tem ${em === "obj" ? "on" : ""}" data-em="obj" aria-label="Ganze Striche radieren" title="Ganze Striche radieren">${IC.erObj}</button><button class="tem ${em === "part" ? "on" : ""}" data-em="part" aria-label="Nur Berührtes radieren" title="Nur Berührtes radieren">${IC.erPart}</button></div>` : "";
+  return `${tb("pen", "Stift")}${tb("hl", "Marker")}${tb("er", "Radierer")}${tb("lasso", "Lasso (auswählen)")}${ems}<span class="tsep c"></span><div class="tcols">${cols}</div><span class="tsep s"></span><div class="tszs">${szs}</div>`;
 }
 function renderTools(){ ["toolsT", "toolsB"].forEach(id => { const el = $("#" + id); if (el) { el.dataset.t = TS.tool; el.innerHTML = toolsInner(); } }); }
 function setTool(t){ if (ED.sel) clearSel(); TS.tool = t; saveTools(); renderTools(); }
@@ -1915,7 +1921,7 @@ function onDown(e){
     DR.s = { id: uid(), t, c: cfg.c, w: (t === "h" ? HL_W : PEN_W)[cfg.w], pts: [pt.x, pt.y, pt.pr] }; DR.drawn = 0; DR.dot = false; DR.minD = Math.max(.1, .45 / p.sc);
     DR.R = [pt.x, pt.y, pt.pr]; DR.L = [0]; DR.sg = INK_SG(S.set.ink ?? 4) / p.sc;
     startLive(); liveDraw();
-  } else if (TS.tool === "er") { DR.removed = []; DR.last = pt; eraseSeg(pt, pt); ecur(e); }
+  } else if (TS.tool === "er") { DR.removed = []; DR.last = pt; if (TS.er.m === "part") { DR.part = true; DR.before = p.strokes.slice(); DR.cut = false; } (DR.part ? cutSeg : eraseSeg)(pt, pt); ecur(e); }
   else { DR.poly = [pt.x, pt.y]; startLive(); }
 }
 function onMove(e){
@@ -1928,7 +1934,7 @@ function onMove(e){
     DR.s.pts = smoothPts(R, L, DR.sg); DR.pred = null;
     if (DR.s.t === "p") { const pe = e.getPredictedEvents ? e.getPredictedEvents() : []; const q = []; if (DR.raw) q.push(DR.raw.x, DR.raw.y, DR.raw.pr); for (const ev of pe.slice(0, 3)) { const pt = unitPt(ev, DR); q.push(pt.x, pt.y, pt.pr); } if (q.length) DR.pred = q; }
     schedLive();
-  } else if (DR.removed) { for (const ev of evs) { const pt = unitPt(ev, DR); eraseSeg(DR.last, pt); DR.last = pt; } ecur(e); }
+  } else if (DR.removed) { const f = DR.part ? cutSeg : eraseSeg; for (const ev of evs) { const pt = unitPt(ev, DR); f(DR.last, pt); DR.last = pt; } ecur(e); }
   else if (DR.poly) { for (const ev of evs) { const pt = unitPt(ev, DR); DR.poly.push(pt.x, pt.y); } schedLive(); }
 }
 function onUp(e){
@@ -1941,12 +1947,14 @@ function onUp(e){
     const s = d.s; if (d.raw && d.R) { const R = d.R, n = R.length, l = Math.hypot(d.raw.x - R[n - 3], d.raw.y - R[n - 2]); if (l > .05) { R.push(d.raw.x, d.raw.y, d.raw.pr); d.L.push(d.L[d.L.length - 1] + l); } s.pts = smoothPts(R, d.L, d.sg); } bbox(s); p.strokes.push(s);
     if (s.t === "h") drawInk(p); else if (p.ink.width) { const x = p.ink.getContext("2d"), r = p.reg, res = p.ink.width / r.w, k = res * p.sc; x.setTransform(k, 0, 0, k, -r.x * res, -r.y * res); drawStroke(x, s); }
     clearLive(); pushUndo({ t: "add", pid: p.id, s: [s] }); markDirty(p);
-  } else if (d.removed) { $("#ecur").hidden = true; if (d.removed.length) { pushUndo({ t: "del", pid: p.id, items: d.removed }); markDirty(p); } }
+  } else if (d.part) { $("#ecur").hidden = true; if (d.cut) { pushUndo({ t: "rep", pid: p.id, a: d.before, b: p.strokes.slice() }); markDirty(p); } }
+  else if (d.removed) { $("#ecur").hidden = true; if (d.removed.length) { pushUndo({ t: "del", pid: p.id, items: d.removed }); markDirty(p); } }
   else if (d.poly) { clearLive(); finishLasso(d); }
 }
 function cancelDR(){
   const d = DR; DR = null; if (!d) return;
-  if (d.removed && d.removed.length) { for (let k = d.removed.length - 1; k >= 0; k--) d.p.strokes.splice(Math.min(d.removed[k].i, d.p.strokes.length), 0, d.removed[k].s); drawInk(d.p); }
+  if (d.part) { if (d.cut) { d.p.strokes = d.before; drawInk(d.p); } }
+  else if (d.removed && d.removed.length) { for (let k = d.removed.length - 1; k >= 0; k--) d.p.strokes.splice(Math.min(d.removed[k].i, d.p.strokes.length), 0, d.removed[k].s); drawInk(d.p); }
   const ec = $("#ecur"); if (ec) ec.hidden = true;
   clearLive();
 }
@@ -1969,6 +1977,34 @@ function eraseSeg(a, b){
     if (h) { DR.removed.push({ s, i }); p.strokes.splice(i, 1); hit = true; }
   }
   if (hit) schedInk(p);
+}
+/* Radierer „Nur Berührtes“: schneidet aus den Strichen genau das heraus, was der Radierer (Kreis, entlang seiner Bewegung a→b) berührt.
+   Strichstücke in der Nähe werden fein abgetastet; was übrig bleibt, wird zu neuen, kürzeren Strichen. */
+function cutSeg(a, b){
+  const p = DR.p, R = ER_W[TS.er.w] / p.sc; let hit = false;
+  const x0 = Math.min(a.x, b.x) - R, x1 = Math.max(a.x, b.x) + R, y0 = Math.min(a.y, b.y) - R, y1 = Math.max(a.y, b.y) + R;
+  for (let i = p.strokes.length - 1; i >= 0; i--) {
+    const s = p.strokes[i], bb = s.bb; if (bb[2] < x0 || bb[0] > x1 || bb[3] < y0 || bb[1] > y1) continue;
+    const P = s.pts, n = P.length / 3, lim = R + s.w * .5, out = (x, y) => psd(x, y, a.x, a.y, b.x, b.y) >= lim;
+    if (n === 1) { if (!out(P[0], P[1])) { p.strokes.splice(i, 1); hit = true; } continue; }
+    const pieces = []; let cur = null, cut = false;
+    const add = (x, y, pr) => { if (!cur) { cur = []; pieces.push(cur); } cur.push(x, y, pr); };
+    if (out(P[0], P[1])) add(P[0], P[1], P[2]); else cut = true;
+    for (let j = 1; j < n; j++) {
+      const ax = P[j * 3 - 3], ay = P[j * 3 - 2], ap = P[j * 3 - 1], bx = P[j * 3], by = P[j * 3 + 1], bp = P[j * 3 + 2];
+      if (ssd(a.x, a.y, b.x, b.y, ax, ay, bx, by) >= lim) { if (!cur) add(ax, ay, ap); add(bx, by, bp); continue; }
+      const st = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / Math.max(.15, lim * .12)));
+      for (let k = 1; k <= st; k++) {
+        const u = k / st, x = ax + (bx - ax) * u, y = ay + (by - ay) * u, pr = ap + (bp - ap) * u;
+        if (out(x, y)) { if (!cur) add(x, y, pr); else if (k === st || !out(ax + (bx - ax) * (k + 1) / st, ay + (by - ay) * (k + 1) / st)) add(x, y, pr); }
+        else { cut = true; cur = null; }
+      }
+    }
+    if (!cut) continue;
+    const keep = pieces.filter(q => q.length >= 6).map(q => { const t = { id: uid(), t: s.t, c: s.c, w: s.w, pts: q }; bbox(t); return t; });
+    p.strokes.splice(i, 1, ...keep); hit = true;
+  }
+  if (hit) { DR.cut = true; schedInk(p); }
 }
 function pip(x, y, P){ let inside = false; for (let i = 0, j = P.length - 2; i < P.length; j = i, i += 2) { const xi = P[i], yi = P[i + 1], xj = P[j], yj = P[j + 1]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside; } return inside; }
 function finishLasso(d){
@@ -2049,6 +2085,7 @@ function applyU(u, back){
   const p = ED.pages.find(x => x.id === u.pid); if (!p) return;
   if (u.t === "add") { if (back) { const ids = new Set(u.s.map(s => s.id)); p.strokes = p.strokes.filter(s => !ids.has(s.id)); } else p.strokes.push(...u.s); }
   else if (u.t === "del") { if (back) { for (let k = u.items.length - 1; k >= 0; k--) p.strokes.splice(Math.min(u.items[k].i, p.strokes.length), 0, u.items[k].s); } else { const ids = new Set(u.items.map(it => it.s.id)); p.strokes = p.strokes.filter(s => !ids.has(s.id)); } }
+  else if (u.t === "rep") p.strokes = (back ? u.a : u.b).slice();
   else if (u.t === "move") { const k = back ? -1 : 1, ids = new Set(u.ids); p.strokes.forEach(s => { if (ids.has(s.id)) moveStroke(s, u.dx * k, u.dy * k); }); }
   else if (u.t === "color") { const ids = new Set(u.ids); p.strokes.forEach(s => { if (ids.has(s.id)) s.c = back ? (u.from[s.id] || s.c) : u.to; }); }
   drawInk(p); markDirty(p);
@@ -2189,6 +2226,7 @@ function bindEditor(){
     const tl = e.target.closest("[data-tool]"); if (tl) { setTool(tl.dataset.tool); return; }
     const col = e.target.closest("[data-col]");
     if (col) { const k = TS.tool; if (col.dataset.col === "more") palette(k, TS[k].c, c => setColor(k, c, true)); else setColor(k, col.dataset.col); return; }
+    const emb = e.target.closest("[data-em]"); if (emb) { TS.er.m = emb.dataset.em; saveTools(); renderTools(); toast(TS.er.m === "part" ? "Radierer: nur das, was er berührt" : "Radierer: ganze Striche"); return; }
     const w = e.target.closest("[data-w]"); if (w && w.closest(".tools")) { TS[TS.tool].w = +w.dataset.w; saveTools(); renderTools(); return; }
     const sl = e.target.closest("[data-sel]"); if (sl) { ({ del: selDelete, dup: selDup, color: selColor })[sl.dataset.sel](); return; }
     const b = e.target.closest("[data-ed]"); if (!b) return;
