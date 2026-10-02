@@ -1822,7 +1822,12 @@ function layout(){
 }
 function place(p, r){
   const res0 = Math.min(DPR(), Math.sqrt(MAXPX / Math.max(1, r.w * r.h))), c = p.ink;
-  const W = Math.max(1, Math.round(r.w * res0)), H = Math.max(1, Math.round(r.h * res0));
+  /* Zeichenfläche genau auf die Bildschirmpixel legen: Anfang auf ganze Pixel, Größe = Pixelzahl / Auflösung.
+     Sonst liegt sie um Bruchteile eines Pixels versetzt bzw. minimal gestreckt und der Browser zeichnet alles leicht unscharf nach. */
+  const b = G.on ? { left: 0, top: 0 } : p.el.getBoundingClientRect(), ox = b.left * res0, oy = b.top * res0; /* beim Zoomen mit zwei Fingern ist die Seite verzerrt → danach wird ohnehin neu gelegt */
+  const X0 = Math.floor(ox + r.x * res0), Y0 = Math.floor(oy + r.y * res0);
+  const W = Math.max(1, Math.ceil(ox + (r.x + r.w) * res0) - X0), H = Math.max(1, Math.ceil(oy + (r.y + r.h) * res0) - Y0);
+  r = { x: (X0 - ox) / res0, y: (Y0 - oy) / res0, w: W / res0, h: H / res0 };
   if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
   const s = c.style; s.left = r.x + "px"; s.top = r.y + "px"; s.width = r.w + "px"; s.height = r.h + "px";
   p.reg = r;
