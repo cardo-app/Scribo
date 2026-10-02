@@ -1596,7 +1596,7 @@ function penPath(P, w, extra){
 /* Schreibhilfe: glättet das Zittern der Hand. Jeder Punkt wird zum gewichteten Mittel seiner Nachbarn entlang des Strichs
    (Gauß-Glocke über die Strichlänge, Breite sg). Das Fenster ist zu beiden Seiten gleich breit und wird an Anfang und Ende kleiner –
    so bleibt das Strichende genau an der Stiftspitze (keine Verzögerung) und der fertige Strich sieht aus wie beim Schreiben. */
-const INK_SG = v => (v || 0) * .55; /* Stärke 0–10 → Glättungsbreite in Bildschirmpunkten */
+const INK_SG = v => (v = v || 0) * .4 + v * v * .07; /* Stärke 0–10 → Glättungsbreite in Bildschirmpunkten (oben steiler: Stark = 11) */
 function smoothPts(R, L, sg){
   const n = R.length / 3; if (!(sg > 0) || n < 3) return R.slice();
   const out = new Array(R.length), k2 = -1 / (2 * sg * sg), L0 = L[0], Ln = L[n - 1];
