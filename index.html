@@ -2295,6 +2295,22 @@ function bindEditor(){
 }
 addEventListener("pointerup", e => { if (e.pointerType === "touch") touches.delete(e.pointerId); }, true);
 addEventListener("pointercancel", e => { if (e.pointerType === "touch") touches.delete(e.pointerId); }, true);
+/* Browser-Zoom (z. B. Zusammenziehen auf dem Trackpad) vergrößert nur das fertige Bild → Striche unscharf.
+   Deshalb im Editor: Strg/⌘+Scrollen abfangen, und falls Safari trotzdem hineinzoomt, den Browser-Zoom zurücksetzen und stattdessen Scribos eigenen (scharfen) Zoom verwenden. */
+document.addEventListener("wheel", e => { if (ED.on && (e.ctrlKey || e.metaKey)) e.preventDefault(); }, { passive: false, capture: true });
+if (window.visualViewport) {
+  let vvT = 0;
+  visualViewport.addEventListener("resize", () => {
+    clearTimeout(vvT);
+    vvT = setTimeout(() => {
+      const vv = visualViewport, k = vv.scale; if (!ED.on || !(k > 1.02)) return;
+      const cx = vv.offsetLeft + vv.width / 2, cy = vv.offsetTop + vv.height / 2;
+      const m = document.querySelector('meta[name="viewport"]'), c = m.content;
+      m.content = c.replace("maximum-scale=1", "maximum-scale=1.0001"); requestAnimationFrame(() => { m.content = c; });
+      setTimeout(() => { zoomTo(clamp(ED.zoom * k, ZMIN, ZMAX), { x: cx, y: cy }); }, 60);
+    }, 250);
+  });
+}
 document.addEventListener("gesturestart", e => { if (!ED.on) return; e.preventDefault(); if (PZ || touches.size) return; gStart({ x: e.clientX, y: e.clientY }); G.saf = true; });
 document.addEventListener("gesturechange", e => { if (!ED.on) return; e.preventDefault(); if (G.saf) gMove(e.scale, { x: e.clientX, y: e.clientY }); });
 document.addEventListener("gestureend", e => { if (!ED.on) return; e.preventDefault(); if (G.saf) { G.saf = false; gEnd(); } });
