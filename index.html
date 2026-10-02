@@ -1986,7 +1986,22 @@ function onMove(e){
     for (const ev of evs) { const pt = unitPt(ev, DR), n = R.length, dx = pt.x - R[n - 3], dy = pt.y - R[n - 2], d2 = dx * dx + dy * dy; DR.raw = pt; if (d2 < m2) { R[n - 1] = Math.max(R[n - 1], pt.pr); continue; } R.push(pt.x, pt.y, pt.pr); L.push(L[L.length - 1] + Math.sqrt(d2)); }
     let k = L.length - 1; while (k > 0 && L[k - 1] > Lold - 3 * DR.sg) k--; /* nur das Ende des Strichs kann sich durch die Glättung noch ändern */
     DR.s.pts = smoothFrom(R, L, DR.sg, DR.s.pts, Math.max(0, k - 1)); DR.pred = null;
-    if (DR.s.t === "p") { const pe = e.getPredictedEvents ? e.getPredictedEvents() : []; const q = []; if (DR.raw) q.push(DR.raw.x, DR.raw.y, DR.raw.pr); for (const ev of pe.slice(0, 3)) { const pt = unitPt(ev, DR); q.push(pt.x, pt.y, pt.pr); } if (q.length) DR.pred = q; }
+    if (DR.s.t === "p") {
+      const H = DR.hist || (DR.hist = []); for (const ev of evs) { const pt = unitPt(ev, DR); H.push(pt.x, pt.y, ev.timeStamp || e.timeStamp); } if (H.length > 36) H.splice(0, H.length - 36);
+      const pe = e.getPredictedEvents ? e.getPredictedEvents() : []; const q = []; if (DR.raw) q.push(DR.raw.x, DR.raw.y, DR.raw.pr);
+      if (pe.length) for (const ev of pe.slice(0, 3)) { const pt = unitPt(ev, DR); q.push(pt.x, pt.y, pt.pr); }
+      else if (DR.raw && H.length >= 6) {
+        /* Safari liefert keine vorhergesagten Punkte → selbst schätzen: Tempo der letzten ~30 ms fortschreiben (gedämpft, begrenzt).
+           So reicht die Tinte bis an die Stiftspitze heran, statt sichtbar stückweise hinterherzuwachsen. */
+        const m = H.length - 3, t1 = H[m + 2]; let j = m; while (j >= 3 && t1 - H[j + 2] < 30) j -= 3;
+        const dt = t1 - H[j + 2];
+        if (dt > 2) {
+          let vx = (H[m] - H[j]) / dt, vy = (H[m + 1] - H[j + 1]) / dt; const sp = Math.hypot(vx, vy), cap = 26 / DR.p.sc / 22; if (sp > cap) { vx *= cap / sp; vy *= cap / sp; }
+          for (const a of [8, 16, 22]) q.push(DR.raw.x + vx * a, DR.raw.y + vy * a, DR.raw.pr);
+        }
+      }
+      if (q.length) DR.pred = q;
+    }
     schedLive();
   } else if (DR.removed) { const f = DR.part ? cutSeg : eraseSeg; for (const ev of evs) { const pt = unitPt(ev, DR); f(DR.last, pt); DR.last = pt; } ecur(e); }
   else if (DR.poly) { for (const ev of evs) { const pt = unitPt(ev, DR); DR.poly.push(pt.x, pt.y); } schedLive(); }
