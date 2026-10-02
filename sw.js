@@ -1,7 +1,7 @@
 // Scribo – Service Worker: App funktioniert nach dem ersten Besuch auch offline.
 // Seiten: zuerst Netz (Updates kommen sofort an), sonst gespeicherte Kopie. Skripte/Icons: aus dem Speicher, im Hintergrund erneuert.
 // Wichtig: Cardo liegt auf derselben Adresse (cardo-app.github.io) → nur eigene Speicher „notizen-…“ anfassen.
-const CACHE = "notizen-v20";
+const CACHE = "notizen-v21";
 const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
 const CORE = ["./", "index.html", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js", PDFJS + "pdf.min.js", PDFJS + "pdf.worker.min.js"];

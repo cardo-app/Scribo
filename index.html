@@ -1943,9 +1943,20 @@ function liveDraw(){
     const L = DR.L, Ln = L[L.length - 1], lim = 3 * DR.sg; let f = n - 1; while (f > 0 && Ln - L[f] < lim) f--;
     const upto = f - 2; /* die weiche Kurve braucht auch den nächsten Punkt */
     if (upto > DR.done && upto > 0) { DR.bx.fillStyle = s.c; DR.bx.fill(penPath(s.pts, s.w, null, Math.max(0, DR.done), upto)); DR.done = upto; }
-    const c = ED.live; x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); x.drawImage(ED.liveBuf, 0, 0);
-    regT(DR.p, c, x);
-    x.fillStyle = s.c; x.fill(penPath(s.pts, s.w, DR.pred, Math.max(0, DR.done)));
+    /* nur den kleinen Bereich um das Strichende erneuern (nicht die ganze, riesige Zeichenfläche → viel weniger Arbeit pro Bild) */
+    const c = ED.live, P = s.pts, Q = DR.pred, r = DR.p.reg, res = c.width / r.w, sc = DR.p.sc, m = s.w * 1.5 + 2 / sc;
+    let u0 = Infinity, v0 = Infinity, u1 = -Infinity, v1 = -Infinity;
+    const ext = (A, i0) => { if (A) for (let i = i0 * 3; i < A.length; i += 3) { const a = A[i], b = A[i + 1]; if (a < u0) u0 = a; if (a > u1) u1 = a; if (b < v0) v0 = b; if (b > v1) v1 = b; } };
+    ext(P, Math.max(0, DR.done)); ext(Q, 0);
+    let bx0 = Math.floor(((u0 - m) * sc - r.x) * res), by0 = Math.floor(((v0 - m) * sc - r.y) * res), bx1 = Math.ceil(((u1 + m) * sc - r.x) * res), by1 = Math.ceil(((v1 + m) * sc - r.y) * res);
+    const pv = DR.tb; DR.tb = [bx0, by0, bx1, by1];
+    if (pv) { bx0 = Math.min(bx0, pv[0]); by0 = Math.min(by0, pv[1]); bx1 = Math.max(bx1, pv[2]); by1 = Math.max(by1, pv[3]); }
+    bx0 = Math.max(0, bx0); by0 = Math.max(0, by0); bx1 = Math.min(c.width, bx1); by1 = Math.min(c.height, by1);
+    if (bx1 > bx0 && by1 > by0) {
+      x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.beginPath(); x.rect(bx0, by0, bx1 - bx0, by1 - by0); x.clip();
+      x.clearRect(bx0, by0, bx1 - bx0, by1 - by0); x.drawImage(ED.liveBuf, bx0, by0, bx1 - bx0, by1 - by0, bx0, by0, bx1 - bx0, by1 - by0);
+      regT(DR.p, c, x); x.fillStyle = s.c; x.fill(penPath(P, s.w, Q, Math.max(0, DR.done))); x.restore();
+    }
   } else if (DR.poly) {
     const P = DR.poly, sc = DR.p.sc; ctxOf(DR.p, ED.live);
     x.lineWidth = 1.6 / sc; x.setLineDash([6 / sc, 5 / sc]); x.strokeStyle = "#2962FF"; x.fillStyle = "rgba(41,98,255,.06)";
